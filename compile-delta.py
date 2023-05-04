@@ -109,12 +109,18 @@ def handle_locale(lc: str) -> None:
     # These might reduce the size of the test set for 
     if conf.UNIQUE_SENTENCES:
         diff_df['s_enum'], s_unique = pd.factorize(diff_df['sentence']) # add an enumaration column for client_id's
-        diff_df.drop_duplicates(subset="s_enum", keep="first", inplace=True)
+        num_uq_sentences = len(diff_df["s_enum"].unique())
+        # conditional bias removal
+        if (num_uq_sentences >= conf.MAX_DELTA_SIZE) or (num_uq_sentences < conf.MAX_DELTA_SIZE and not conf.UNIQUE_SENTENCES_ONLY_IF_AVAILABLE):
+            diff_df.drop_duplicates(subset="s_enum", keep="first", inplace=True)
         diff_df.drop(columns=["s_enum"], inplace=True)
 
     if conf.UNIQUE_VOICES:
         diff_df['v_enum'], v_unique = pd.factorize(diff_df['client_id']) # add an enumaration column for client_id's
-        diff_df.drop_duplicates(subset="v_enum", keep="first", inplace=True)
+        num_uq_voices = len(diff_df["v_enum"].unique())
+        # conditional bias removal
+        if (num_uq_voices >= conf.MAX_DELTA_SIZE) or (num_uq_voices < conf.MAX_DELTA_SIZE and not conf.UNIQUE_VOICES_ONLY_IF_AVAILABLE):
+            diff_df.drop_duplicates(subset="v_enum", keep="first", inplace=True)
         diff_df.drop(columns=["v_enum"], inplace=True)
 
     # Get top

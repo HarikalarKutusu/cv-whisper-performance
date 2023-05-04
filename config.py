@@ -16,7 +16,9 @@ MAX_DELTA_SIZE: int = 100
 
 # Bias related
 UNIQUE_SENTENCES: bool = True
-UNIQUE_VOICES: bool = False
+UNIQUE_SENTENCES_ONLY_IF_AVAILABLE: bool = True
+UNIQUE_VOICES: bool = True
+UNIQUE_VOICES_ONLY_IF_AVAILABLE: bool = True
 
 # Base location of tsv files for Common Voice v9.0
 CV9_DIR: str = os.path.join(
