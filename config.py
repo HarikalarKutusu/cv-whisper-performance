@@ -3,6 +3,7 @@
 #
 # Your local configuration
 # Modify the values to point to respective directories in your system
+# Modify the test related values (size and bias related settings)
 #
 # This script is part of Common Voice ToolBox Package
 #
@@ -11,14 +12,9 @@
 ###########################################################################
 import os
 
-# Test set size
-MAX_DELTA_SIZE: int = 100
-
-# Bias related
-UNIQUE_SENTENCES: bool = True
-UNIQUE_SENTENCES_ONLY_IF_AVAILABLE: bool = True
-UNIQUE_VOICES: bool = True
-UNIQUE_VOICES_ONLY_IF_AVAILABLE: bool = True
+#
+# Directories
+#
 
 # Base location of tsv files for Common Voice v9.0
 CV9_DIR: str = os.path.join(
@@ -36,8 +32,27 @@ WHISPER_MODEL_DIR: str = os.path.join(
     "M:", os.sep, "__STATIC", "_DATASETS", "VOICE", "WHISPER_MODELS"
     )
 
+#
+# Test settings
+#
+
+# compile-delta.py - Test set size
+MAX_DELTA_SIZE: int = 100
+
+# compile-delta.py - Bias removal related
+UNIQUE_SENTENCES: bool = True
+UNIQUE_SENTENCES_ONLY_IF_AVAILABLE: bool = True
+UNIQUE_VOICES: bool = True
+UNIQUE_VOICES_ONLY_IF_AVAILABLE: bool = True
+
 # List of whisper models to test against
-WHISPER_MODELS_TEST: list[str] = [
+WHISPER_MODELS_TO_TEST: list[str] = [
     "tiny",
     "base",
 ]
+
+#
+# Program parameters
+#
+VERBOSE: bool = False
+FAIL_ON_NOT_FOUND: bool = True
