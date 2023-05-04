@@ -21,3 +21,14 @@ WHISPER_LC: list[str] = [
     "ta", "te", "tg", "th", "tk", "tl", "tr", "tt", "uk", "ur", "uz",
     "vi", "yi", "yo", "zh"
     ]
+
+# List of model names to test against, see https://github.com/openai/whisper#available-models-and-languages
+# We use multi-lingual models
+WHISPER_MODEL_EXT = "pt"
+WHISPER_MODELS_ALL: list[str] = [
+    "tiny",
+    "base",
+    "small",
+    "medium",
+    "large"
+]
