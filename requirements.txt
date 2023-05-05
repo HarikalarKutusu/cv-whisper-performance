@@ -2,3 +2,4 @@ pandas
 psutil
 commonvoice-utils
 openai-whisper
+jiwer
