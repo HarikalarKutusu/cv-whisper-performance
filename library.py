@@ -88,6 +88,7 @@ class TranscriptionRec(TypedDict):
     item_total_duration: float
 
 class AggregationRec(TypedDict):
+    model: str
     lc: str
     num_sentences: int
     inference_duration: float

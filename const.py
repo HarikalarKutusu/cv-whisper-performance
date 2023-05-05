@@ -166,6 +166,7 @@ TRANSCRIPTION_REC_COLS: list[str] = [
 ]
 
 AGGREGATION_REC_COLS: list[str] = [
+    "model",
     "lc",
     "num_sentences",
     "inference_duration",
