@@ -45,12 +45,13 @@ NUM_PROCS: int = psutil.cpu_count(logical=False) - 1
 # Locale handling (multiprocessed)
 #
 
-def handle_locale(lc: str) -> None:
+
+def handle_locale(lc: str) -> dict[str, Any]:
     """Handle a single locale (multiprocess)"""
     # precalc paths
-    cv9_path = os.path.join(conf.CV9_DIR, lc)
-    cv_latest_path = os.path.join(conf.CV_LATEST_DIR, lc)
-    cv_latest_audio_path = os.path.join(cv_latest_path, "clips")
+    cv9_path: str = os.path.join(conf.CV9_DIR, lc)
+    cv_latest_path: str = os.path.join(conf.CV_LATEST_DIR, lc)
+    cv_latest_audio_path: str = os.path.join(cv_latest_path, "clips")
 
     # get validated dataframes
     validated_v9_df: pd.DataFrame = df_read(os.path.join(cv9_path, "validated.tsv"))
@@ -65,20 +66,24 @@ def handle_locale(lc: str) -> None:
     diff_df.drop(columns=["s_len"], inplace=True)
 
     # Remove duplicate sentences & voices for less bias - if required (set in config.py)
-    # These might reduce the size of the test set for 
+    # These might reduce the size of the test set for
     if conf.UNIQUE_SENTENCES:
-        diff_df['s_enum'], s_unique = pd.factorize(diff_df['sentence']) # add an enumaration column for client_id's
-        num_uq_sentences = len(diff_df["s_enum"].unique())
+        diff_df["s_enum"], s_unique = pd.factorize(diff_df["sentence"])  # add an enumaration column for sentences
+        num_uq_sentences: int = len(diff_df["s_enum"].unique())
         # conditional bias removal
-        if (num_uq_sentences >= conf.MAX_DELTA_SIZE) or (num_uq_sentences < conf.MAX_DELTA_SIZE and not conf.UNIQUE_SENTENCES_ONLY_IF_AVAILABLE):
+        if (num_uq_sentences >= conf.MAX_DELTA_SIZE) or (
+            num_uq_sentences < conf.MAX_DELTA_SIZE and not conf.UNIQUE_SENTENCES_ONLY_IF_AVAILABLE
+        ):
             diff_df.drop_duplicates(subset="s_enum", keep="first", inplace=True)
         diff_df.drop(columns=["s_enum"], inplace=True)
 
     if conf.UNIQUE_VOICES:
-        diff_df['v_enum'], v_unique = pd.factorize(diff_df['client_id']) # add an enumaration column for client_id's
-        num_uq_voices = len(diff_df["v_enum"].unique())
+        diff_df["v_enum"], v_unique = pd.factorize(diff_df["client_id"])  # add an enumaration column for client_id's
+        num_uq_voices: int = len(diff_df["v_enum"].unique())
         # conditional bias removal
-        if (num_uq_voices >= conf.MAX_DELTA_SIZE) or (num_uq_voices < conf.MAX_DELTA_SIZE and not conf.UNIQUE_VOICES_ONLY_IF_AVAILABLE):
+        if (num_uq_voices >= conf.MAX_DELTA_SIZE) or (
+            num_uq_voices < conf.MAX_DELTA_SIZE and not conf.UNIQUE_VOICES_ONLY_IF_AVAILABLE
+        ):
             diff_df.drop_duplicates(subset="v_enum", keep="first", inplace=True)
         diff_df.drop(columns=["v_enum"], inplace=True)
 
@@ -86,12 +91,12 @@ def handle_locale(lc: str) -> None:
     diff_df = diff_df.head(conf.MAX_DELTA_SIZE)
 
     # create destination
-    dest_path = os.path.join(HERE, "data", "cv-delta", lc)
-    dest_clips_path = os.path.join(dest_path, "clips")
+    dest_path: str = os.path.join(HERE, "data", "cv-delta", lc)
+    dest_clips_path: str = os.path.join(dest_path, "clips")
     os.makedirs(dest_clips_path, exist_ok=True)
 
     # save diff.tsv
-    df_write(diff_df, os.path.join(dest_path, "diff.tsv"))
+    df_write(diff_df, os.path.join(dest_path, c.DIFF_FN))
 
     # Copy related clip audio files
     clip_names: list[str] = diff_df["path"].to_list()
@@ -99,46 +104,51 @@ def handle_locale(lc: str) -> None:
         shutil.copy(os.path.join(cv_latest_audio_path, clip_name), dest_clips_path)
 
     # Report results
-    result = {
+    result: dict[str, Any] = {
         "lc": lc,
         "recordings": diff_df.shape[0],
         "uq_voices": len(diff_df["client_id"].unique()),
-        "uq_sentences": len(diff_df["sentence"].unique())
+        "uq_sentences": len(diff_df["sentence"].unique()),
     }
-    print(f"Finished LC={lc} Added {result['recordings']} recordings from {result['uq_sentences']} sentences and {result['uq_voices']} voices to diff")
+    print(
+        f"Finished LC={lc} Added {result['recordings']} recordings from {result['uq_sentences']} sentences and {result['uq_voices']} voices to diff"
+    )
     return result
+
 
 #
 # MAIN PROCESS
 #
 
+
 def main() -> None:
     """Main process which loops through whisper languages and handles locales with MP"""
 
-    print(f'==> Whisper supports {len(c.WHISPER_LC)} locales...')
+    print(f"==> Whisper supports {len(c.WHISPER_LC)} locales...")
     # Make sure all exist
     lc_list: list[str] = []
     for lc in c.WHISPER_LC:
-        cv9_path = os.path.join(conf.CV9_DIR, lc)
-        cv_latest_path = os.path.join(conf.CV_LATEST_DIR, lc)
+        cv9_path: str = os.path.join(conf.CV9_DIR, lc)
+        cv_latest_path: str = os.path.join(conf.CV_LATEST_DIR, lc)
         if os.path.isdir(cv9_path) and os.path.isdir(cv_latest_path):  # both should exist
             lc_list.append(lc)
-    print(f'==> Skipping {len(c.WHISPER_LC) - len(lc_list)} locales as they do not exist in CV9 & CV13 datasets...')
+    print(f"==> Skipping {len(c.WHISPER_LC) - len(lc_list)} locales as they do not exist in CV9 & CV13 datasets...")
 
     # Test
-    results: list[dict[str, int]] = []
+    results: list[dict] = []
     # results.append(handle_locale(lc_list[0]))
 
     # Multiprocess each locale
-    print(f'==> Processing remaining {len(lc_list)} locales...')
+    print(f"==> Processing remaining {len(lc_list)} locales...")
     with mp.Pool(NUM_PROCS) as pool:
         results = pool.map(handle_locale, lc_list)
 
-    results_df = pd.DataFrame.from_records(results, columns=["lc", "recordings", "uq_voices", "uq_sentences"])
+    results_df: pd.DataFrame = pd.DataFrame.from_records(results, columns=c.DIFF_SUMMARY_COLS)
     # print(results)
     # print(results_df)
-    df_write(results_df, os.path.join(HERE, "data", "cv-delta", "summary.tsv"))
+    df_write(results_df, os.path.join(HERE, "data", "cv-delta", c.SUMMARY_FN))
+
 
 # Entry point
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
