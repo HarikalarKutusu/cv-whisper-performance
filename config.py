@@ -49,6 +49,9 @@ UNIQUE_VOICES_ONLY_IF_AVAILABLE: bool = True
 WHISPER_MODELS_TO_TEST: list[str] = [
     "tiny",
     "base",
+    "small",
+    "medium",
+    "large",
 ]
 
 #
