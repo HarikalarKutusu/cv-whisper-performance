@@ -22,10 +22,10 @@ import pandas as pd
 import whisper
 
 # Try to get rid of deprecation warnings
-from numba.core.errors import NumbaDeprecationWarning, NumbaPendingDeprecationWarning
-import warnings
-warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
-warnings.simplefilter('ignore', category=NumbaPendingDeprecationWarning)
+# from numba.core.errors import NumbaDeprecationWarning, NumbaPendingDeprecationWarning
+# import warnings
+# warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
+# warnings.simplefilter('ignore', category=NumbaPendingDeprecationWarning)
 
 # jiwer
 import jiwer
@@ -55,7 +55,7 @@ from library import (
 )
 
 # Multi Processing Cores
-NUM_PROCS: int = psutil.cpu_count(logical=False) - 1
+MAX_NUM_PROCS: int = psutil.cpu_count(logical=False)
 
 #
 # Locale handling (multiprocessed)
@@ -65,16 +65,14 @@ NUM_PROCS: int = psutil.cpu_count(logical=False) - 1
 def handle_locale(model_name: str, diff_path: str) -> AggregationRec:
     """Handle a single locale (multiprocess)"""
     start_locale: datetime = datetime.now()
-    # model_name: str = props["model_name"]
-    # model: whisper.Whisper = props["model"]
-    # diff_path: str = props["diff_path"]
-    model_dir: str = os.path.join(HERE, "data", "models", "default")
-    model: whisper.Whisper = whisper.load_model(name=model_name, download_root=model_dir, in_memory=True)
-
     # get dir
     locale_path: str = os.path.split(diff_path)[0]
     lc_tsv: str = os.path.split(diff_path)[1]
     lc: str = locale_path.split(os.sep)[-1]
+    dest_path: str = os.path.join(HERE, "data", "results", model_name, lc + ".tsv")
+
+    model_dir: str = os.path.join(HERE, "data", "models", "default")
+    model: whisper.Whisper = whisper.load_model(name=model_name, download_root=model_dir) # , in_memory=True
 
     # get diff dataframe as result and expand it with new columns
     source_df: pd.DataFrame = df_read(diff_path)
@@ -105,11 +103,11 @@ def handle_locale(model_name: str, diff_path: str) -> AggregationRec:
 
     # save locale results for this model
     results_df: pd.DataFrame = pd.DataFrame.from_records(results, columns=c.TRANSCRIPTION_REC_COLS)
-    dest_path: str = os.path.join(HERE, "data", "results", model_name, lc + ".tsv")
     df_write(results_df, dest_path)
 
     # Report results
     agg_result: AggregationRec = {
+        "model": model_name,
         "lc": lc,
         "num_sentences": results_df.shape[0],
         "inference_duration": results_df["item_inference_duration"].sum(),
@@ -136,6 +134,7 @@ def handle_model(model_name: str):
     # model: whisper.Whisper = whisper.load_model(name=model_name, download_root=model_dir, in_memory=True)
     # get a list of source test files
     diff_files: list[str] = glob.glob(os.path.join(HERE, "data", "cv-delta", "**", c.DIFF_FN), recursive=True)
+    diff_files.sort()
     # create destination dir
     dest_path: str = os.path.join(HERE, "data", "results", model_name)
     os.makedirs(dest_path, exist_ok=True)
@@ -152,7 +151,13 @@ def handle_model(model_name: str):
     results: list[AggregationRec] = []
     
     # results.append(handle_locale(model_name, diff_files[48])) # Single test
-    
+
+    # Decide on concurrency
+    NUM_PROCS: int = min(
+        int(conf.VRAM / c.WHISPER_MODEL_VRAM[model_name]),
+        MAX_NUM_PROCS
+        )
+
     with mp.Pool(NUM_PROCS) as pool:
         results = pool.starmap(handle_locale, args)
 
