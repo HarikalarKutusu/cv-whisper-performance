@@ -1,5 +1,6 @@
 pandas
 psutil
-commonvoice-utils
-openai-whisper
 jiwer
+av
+git+https://github.com/ftyers/commonvoice-utils.git
+git+https://github.com/openai/whisper.git
