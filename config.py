@@ -45,23 +45,29 @@ UNIQUE_SENTENCES_ONLY_IF_AVAILABLE: bool = True
 UNIQUE_VOICES: bool = True
 UNIQUE_VOICES_ONLY_IF_AVAILABLE: bool = True
 
+# Force exclude languages (TO)
+EXCLUDED_LANGUAGES: list[str] = [
+    "is",   # no validated data in v13.0
+]
+
 # List of whisper models to test against
 WHISPER_MODELS_TO_TEST: list[str] = [
     "tiny",
     # "base",
     # "small",
     # "medium",
+    # "large-v1",
     # "large-v2",
 ]
-
-#
-# GPU
-#
-#VRAM in GB
-VRAM: int = 24
 
 #
 # Program parameters
 #
 VERBOSE: bool = False
 FAIL_ON_NOT_FOUND: bool = True
+
+#
+# GPU
+#
+#VRAM in GB
+VRAM: int = 24
