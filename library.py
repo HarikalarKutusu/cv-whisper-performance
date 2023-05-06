@@ -36,9 +36,23 @@ def df_write(df: pd.DataFrame, fpath: str) -> bool:
         print(f'Generated: {fpath} Records={df.shape[0]}')
     return True
 
+def decN(x: float, n: int) -> float:
+    N = 10**n
+    return int(N * x)/N
+
+def dec2(x: float) -> float:
+    return int(100 * x)/100
+
 #
 # Type definitions
 #
+class DeltaResult(TypedDict):
+    lc: str
+    recordings: int
+    duration: float
+    avg_dur: float
+    uq_voices: int
+    uq_sentences: int
 
 class HandleLocaleProps(TypedDict):
     model_name: str
@@ -58,6 +72,23 @@ class CommonVoiceRec(TypedDict):
     variant: str
     locale: str
     segment: str
+
+class CommonVoiceExtended(TypedDict):
+    client_id: str
+    path: str
+    sentence: str
+    up_votes: int
+    down_votes: int
+    down_votes: int
+    age: str
+    gender:	str
+    accents: str
+    variant: str
+    locale: str
+    segment: str
+    s_norm: str             # Normalized sentence
+    s_norm_len: str         # Length
+    a_dur: str              # Audio duration
 
 class WhisperTranscriptionResult(TypedDict):
     text: str
