@@ -3,6 +3,7 @@ import pandas as pd
 import whisper
 from typing import TypedDict
 
+import const as c
 import config as conf
 
 def df_read(fpath: str) -> pd.DataFrame:
@@ -35,6 +36,19 @@ def df_write(df: pd.DataFrame, fpath: str) -> bool:
     if conf.VERBOSE:
         print(f'Generated: {fpath} Records={df.shape[0]}')
     return True
+
+def lc_mapper (lc:str) -> str:
+    if lc in c.MAPPER.keys():
+        return c.MAPPER[lc]
+    else:
+        return lc
+
+def lc_back_mapper (lc:str):
+    if lc in c.BACK_MAPPER.keys():
+        return c.BACK_MAPPER[lc]
+    else:
+        return lc
+
 
 def decN(x: float, n: int) -> float:
     N = 10**n

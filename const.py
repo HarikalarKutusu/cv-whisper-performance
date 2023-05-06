@@ -20,6 +20,20 @@ WHISPER_MODELS_ALL: list[str] = ["tiny", "base", "small", "medium", "large-v2"]
 # VRAM required for model, to calculate max concurrency
 WHISPER_MODEL_VRAM: dict[str, int] = {"tiny": 1, "base": 1, "small": 2, "medium": 5, "large-v2": 10}
 
+MAPPER: dict[str, str] = {
+    "hy": "hy-AM",
+    "nn": "nn-NO",
+    "pa": "pa-IN",
+    "sv": "sv-SE",
+}
+
+BACK_MAPPER: dict[str, str] = {
+    "hy-AM": "hy",
+    "nn-NO": "nn",
+    "pa-IN": "pa",
+    "sv-SE": "sv",
+}
+
 # files
 DIFF_FN = "diff.tsv"
 SUMMARY_FN = "diff_summary.tsv"
