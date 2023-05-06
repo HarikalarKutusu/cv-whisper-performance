@@ -48,11 +48,17 @@ UNIQUE_VOICES_ONLY_IF_AVAILABLE: bool = True
 # List of whisper models to test against
 WHISPER_MODELS_TO_TEST: list[str] = [
     "tiny",
-    "base",
-    "small",
-    "medium",
-    "large",
+    # "base",
+    # "small",
+    # "medium",
+    # "large-v2",
 ]
+
+#
+# GPU
+#
+#VRAM in GB
+VRAM: int = 24
 
 #
 # Program parameters

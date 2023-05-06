@@ -115,7 +115,15 @@ WHISPER_LC: list[str] = [
 # List of model names to test against, see https://github.com/openai/whisper#available-models-and-languages
 # We use multi-lingual models
 WHISPER_MODEL_EXT = "pt"
-WHISPER_MODELS_ALL: list[str] = ["tiny", "base", "small", "medium", "large"]
+WHISPER_MODELS_ALL: list[str] = ["tiny", "base", "small", "medium", "large-v2"]
+# VRAM required for model, to calculate max concurrency
+WHISPER_MODEL_VRAM: dict[str, int] = {
+    "tiny": 1,
+    "base": 1,
+    "small": 2,
+    "medium": 5,
+    "large-v2": 10
+    }
 
 # files
 DIFF_FN = "diff.tsv"
