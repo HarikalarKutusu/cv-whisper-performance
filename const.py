@@ -117,22 +117,16 @@ WHISPER_LC: list[str] = [
 WHISPER_MODEL_EXT = "pt"
 WHISPER_MODELS_ALL: list[str] = ["tiny", "base", "small", "medium", "large-v2"]
 # VRAM required for model, to calculate max concurrency
-WHISPER_MODEL_VRAM: dict[str, int] = {
-    "tiny": 1,
-    "base": 1,
-    "small": 2,
-    "medium": 5,
-    "large-v2": 10
-    }
+WHISPER_MODEL_VRAM: dict[str, int] = {"tiny": 1, "base": 1, "small": 2, "medium": 5, "large-v2": 10}
 
 # files
 DIFF_FN = "diff.tsv"
-SUMMARY_FN = "summary.tsv"
+SUMMARY_FN = "diff_summary.tsv"
 
 #
 # DataFrame columns
 #
-DIFF_SUMMARY_COLS: list[str] = ["lc", "recordings", "uq_voices", "uq_sentences"]
+DIFF_SUMMARY_COLS: list[str] = ["lc", "recordings", "duration", "avg_dur", "uq_voices", "uq_sentences"]
 
 CV_COLS: list[str] = [
     "client_id",
@@ -147,6 +141,24 @@ CV_COLS: list[str] = [
     "variant",
     "locale",
     "segment",
+]
+
+CV_EXTENDED_COLS: list[str] = [
+    "client_id",
+    "path",
+    "sentence",
+    "up_votes",
+    "down_votes",
+    "down_votes",
+    "age",
+    "gender",
+    "accents",
+    "variant",
+    "locale",
+    "segment",
+    "s_norm",
+    "s_norm_len",
+    "a_dur",
 ]
 
 TRANSCRIPTION_REC_COLS: list[str] = [
