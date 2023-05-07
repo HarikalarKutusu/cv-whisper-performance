@@ -6,10 +6,11 @@ from typing import TypedDict
 import const as c
 import config as conf
 
+
 def df_read(fpath: str) -> pd.DataFrame:
     """Read a tsv file into a dataframe"""
     if not os.path.isfile(fpath):
-        print(f'FATAL: File {fpath} cannot be located!')
+        print(f"FATAL: File {fpath} cannot be located!")
         if conf.FAIL_ON_NOT_FOUND:
             sys.exit(1)
 
@@ -19,10 +20,10 @@ def df_read(fpath: str) -> pd.DataFrame:
         parse_dates=False,
         engine="python",
         encoding="utf-8",
-        on_bad_lines='skip',
+        on_bad_lines="skip",
         quotechar='"',
         quoting=csv.QUOTE_NONE,
-        dtype={'ver': str}
+        dtype={"ver": str},
     )
     return df
 
@@ -32,18 +33,20 @@ def df_write(df: pd.DataFrame, fpath: str) -> bool:
     Writes out a dataframe to a file.
     """
     # Create/override the file
-    df.to_csv(fpath, header=True, index=False, encoding="utf-8", sep='\t', escapechar='\\', quoting=csv.QUOTE_NONE)
+    df.to_csv(fpath, header=True, index=False, encoding="utf-8", sep="\t", escapechar="\\", quoting=csv.QUOTE_NONE)
     if conf.VERBOSE:
-        print(f'Generated: {fpath} Records={df.shape[0]}')
+        print(f"Generated: {fpath} Records={df.shape[0]}")
     return True
 
-def lc_mapper (lc:str) -> str:
+
+def lc_mapper(lc: str) -> str:
     if lc in c.MAPPER.keys():
         return c.MAPPER[lc]
     else:
         return lc
 
-def lc_back_mapper (lc:str):
+
+def lc_back_mapper(lc: str):
     if lc in c.BACK_MAPPER.keys():
         return c.BACK_MAPPER[lc]
     else:
@@ -52,10 +55,12 @@ def lc_back_mapper (lc:str):
 
 def decN(x: float, n: int) -> float:
     N = 10**n
-    return int(N * x)/N
+    return int(N * x) / N
+
 
 def dec2(x: float) -> float:
-    return int(100 * x)/100
+    return int(100 * x) / 100
+
 
 #
 # Type definitions
@@ -65,13 +70,16 @@ class DeltaResult(TypedDict):
     recordings: int
     duration: float
     avg_dur: float
+    avg_char_speed: float
     uq_voices: int
     uq_sentences: int
+
 
 class HandleLocaleProps(TypedDict):
     model_name: str
     model: whisper.Whisper
     diff_path: str
+
 
 class CommonVoiceRec(TypedDict):
     client_id: str
@@ -81,11 +89,12 @@ class CommonVoiceRec(TypedDict):
     down_votes: int
     down_votes: int
     age: str
-    gender:	str
+    gender: str
     accents: str
     variant: str
     locale: str
     segment: str
+
 
 class CommonVoiceExtended(TypedDict):
     client_id: str
@@ -95,19 +104,23 @@ class CommonVoiceExtended(TypedDict):
     down_votes: int
     down_votes: int
     age: str
-    gender:	str
+    gender: str
     accents: str
     variant: str
     locale: str
     segment: str
-    s_norm: str             # Normalized sentence
-    s_norm_len: str         # Length
-    a_dur: str              # Audio duration
+
+    norm_sentence: str  # Normalized sentence
+    norm_sentence_len: str  # Length
+    duration: str  # Audio duration
+    char_speed: float
+
 
 class WhisperTranscriptionResult(TypedDict):
     text: str
     segments: dict
     language: str
+
 
 class TranscriptionRec(TypedDict):
     client_id: str
@@ -117,12 +130,18 @@ class TranscriptionRec(TypedDict):
     down_votes: int
     down_votes: int
     age: str
-    gender:	str
+    gender: str
     accents: str
     variant: str
     locale: str
     segment: str
+
+    norm_sentence: str  # Normalized sentence
+    norm_sentence_len: str  # Length
+    duration: str  # Audio duration
+
     transcription: str
+    norm_transcription: str
     detected_lc: str
     cer: float
     wer: float
@@ -131,6 +150,8 @@ class TranscriptionRec(TypedDict):
     wip: float
     item_inference_duration: float
     item_total_duration: float
+    rtf: float
+
 
 class AggregationRec(TypedDict):
     model: str
@@ -143,3 +164,4 @@ class AggregationRec(TypedDict):
     avg_mer: float
     avg_wil: float
     avg_wip: float
+    avg_rtf: float

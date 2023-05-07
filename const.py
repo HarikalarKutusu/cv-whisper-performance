@@ -11,6 +11,7 @@
 
 # Language codes supported by whisper multilingual
 from whisper.tokenizer import LANGUAGES
+
 WHISPER_LC: list[str] = sorted(LANGUAGES.keys())
 
 # List of model names to test against, see https://github.com/openai/whisper#available-models-and-languages
@@ -41,14 +42,21 @@ SUMMARY_FN = "diff_summary.tsv"
 #
 # DataFrame columns
 #
-DIFF_SUMMARY_COLS: list[str] = ["lc", "recordings", "duration", "avg_dur", "uq_voices", "uq_sentences"]
+DIFF_SUMMARY_COLS: list[str] = [
+    "lc",
+    "recordings",
+    "duration",
+    "avg_dur",
+    "avg_char_speed",
+    "uq_voices",
+    "uq_sentences",
+]
 
 CV_COLS: list[str] = [
     "client_id",
     "path",
     "sentence",
     "up_votes",
-    "down_votes",
     "down_votes",
     "age",
     "gender",
@@ -64,16 +72,16 @@ CV_EXTENDED_COLS: list[str] = [
     "sentence",
     "up_votes",
     "down_votes",
-    "down_votes",
     "age",
     "gender",
     "accents",
     "variant",
     "locale",
     "segment",
-    "s_norm",
-    "s_norm_len",
-    "a_dur",
+    "norm_sentence",
+    "norm_sentence_len",
+    "duration",
+    "char_speed",
 ]
 
 TRANSCRIPTION_REC_COLS: list[str] = [
@@ -82,14 +90,18 @@ TRANSCRIPTION_REC_COLS: list[str] = [
     "sentence",
     "up_votes",
     "down_votes",
-    "down_votes",
     "age",
     "gender",
     "accents",
     "variant",
     "locale",
     "segment",
+    "norm_sentence",
+    "norm_sentence_len",
+    "duration",
+    "char_speed",
     "transcription",
+    "norm_transcription",
     "detected_lc",
     "cer",
     "wer",
@@ -98,6 +110,7 @@ TRANSCRIPTION_REC_COLS: list[str] = [
     "wip",
     "item_inference_duration",
     "item_total_duration",
+    "rtf",
 ]
 
 AGGREGATION_REC_COLS: list[str] = [
