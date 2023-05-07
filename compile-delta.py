@@ -50,6 +50,8 @@ cv: cvu.CV = cvu.CV()
 
 # Multi Processing Cores
 NUM_PROCS: int = psutil.cpu_count(logical=False)
+
+
 #
 # Locale handling (multiprocessed)
 #
@@ -64,9 +66,9 @@ def handle_locale(lc: str) -> DeltaResult:
 
     # get validated dataframes. cv9 might not exist, latest cv should exist
     if os.path.isfile(cv9_validated):
-        ext_df: pd.DataFrame = pd.concat(
-            [df_read(cv9_validated), df_read(cv_latest_validated)]
-        ).drop_duplicates(keep=False) # this keeps only new ones
+        ext_df: pd.DataFrame = pd.concat([df_read(cv9_validated), df_read(cv_latest_validated)]).drop_duplicates(
+            keep=False
+        )  # this keeps only new ones
     else:
         ext_df: pd.DataFrame = df_read(cv_latest_validated)
 
@@ -104,20 +106,20 @@ def handle_locale(lc: str) -> DeltaResult:
     v = cvu.Validator(lc)
     cnt: int = 0
     for inx, row in ext_df.iterrows():
-        res = v.validate(row["sentence"])
-        if res != None:
-            ext_df.at[inx, "s_norm"] = res
-            ext_df.at[inx, "s_norm_len"] = len(res)
+        isOK, res = v.normalise(row["sentence"])
+        if isOK:
+            ext_df.at[inx, "norm_sentence"] = res
+            ext_df.at[inx, "norm_sentence_len"] = len(res)
             cnt += 1
         else:
-            ext_df.at[inx, "s_norm"] = np.nan
+            ext_df.at[inx, "norm_sentence"] = np.nan
         if cnt >= conf.MAX_DELTA_SIZE:
-            break # we've got enough samples
+            break  # we've got enough samples
 
-    ext_df.dropna() # drop invalidated ones
+    ext_df.dropna(subset=["norm_sentence"], inplace=True)  # drop invalidated ones
 
     # Get top N
-    ext_df = ext_df.head(conf.MAX_DELTA_SIZE)
+    ext_df = ext_df.head(conf.MAX_DELTA_SIZE).reset_index(drop=True)
 
     # create destination
     dest_path: str = os.path.join(HERE, "data", "cv-delta", lc)
@@ -129,23 +131,29 @@ def handle_locale(lc: str) -> DeltaResult:
     for clip_name in clip_names:
         shutil.copy(os.path.join(cv_latest_audio_path, clip_name), dest_clips_path)
     # get audio lengths
-    ext_df["a_dur"] = ext_df["path"].apply(
+    ext_df["duration"] = ext_df["path"].apply(
         lambda x: dec2(av.open(os.path.join(cv_latest_audio_path, x)).duration / 1000000)
     )
+    # calc record char speed
+    ext_df["char_speed"] = 1000 * ext_df["duration"] / ext_df["norm_sentence_len"]
+    ext_df["char_speed"] = ext_df["char_speed"].apply(lambda x: dec2(x))
+    ext_df["duration"] = ext_df["duration"].apply(lambda x: dec2(x))
 
     # save diff.tsv
     df_write(ext_df, os.path.join(dest_path, c.DIFF_FN))
 
     # Report results
-    recs = ext_df.shape[0]
-    dur: float = ext_df["a_dur"].sum()
+    recs: int = ext_df.shape[0]
+    dur: float = ext_df["duration"].sum()
     avg_dur: float = dur / recs
-    back_lc = lc_back_mapper(lc)
+    avg_char_speed: float = 1000 * dur / ext_df["norm_sentence_len"].sum()
+    back_lc: str = lc_back_mapper(lc)
     result: DeltaResult = {
         "lc": lc if lc == back_lc else f"{lc} ({back_lc})",
         "recordings": recs,
         "duration": dec2(dur),
         "avg_dur": dec2(avg_dur),
+        "avg_char_speed": dec2(avg_char_speed),
         "uq_voices": len(ext_df["client_id"].unique()),
         "uq_sentences": len(ext_df["sentence"].unique()),
     }
@@ -174,7 +182,11 @@ def main() -> None:
     for lc in c.WHISPER_LC:
         mapped_lc: str = lc_mapper(lc)
         cv_latest_path: str = os.path.join(conf.CV_LATEST_DIR, mapped_lc)
-        if os.path.isdir(cv_latest_path) and (mapped_lc in validator_locales) and not (mapped_lc in conf.EXCLUDED_LANGUAGES):
+        if (
+            os.path.isdir(cv_latest_path)
+            and (mapped_lc in validator_locales)
+            and not (mapped_lc in conf.EXCLUDED_LANGUAGES)
+        ):
             lc_list.append(mapped_lc)
         else:
             print("Skipped:", lc, mapped_lc)
@@ -185,8 +197,8 @@ def main() -> None:
     # Test
     result_list: list[DeltaResult] = []
 
-    # results.append(handle_locale(lc_list[0])) # single process for testing
-    # lc_list=["vi"]
+    # result_list.append(handle_locale(lc_list[6])) # single process for testing
+    # lc_list=["bn"]
 
     # Multiprocess each locale
     print(f"==> Processing remaining {len(lc_list)} locales...")
