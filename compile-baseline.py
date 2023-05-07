@@ -10,7 +10,7 @@
 # Copyright: (c) Bülent Özden, License: AGPL v3.0
 ###########################################################################
 
-import sys, os, shutil, glob, csv
+import sys, os, shutil, glob, csv, json
 from datetime import datetime, timedelta
 from typing import Any
 from collections import Counter
@@ -20,12 +20,6 @@ import pandas as pd
 
 # whisper
 import whisper
-
-# Try to get rid of deprecation warnings
-# from numba.core.errors import NumbaDeprecationWarning, NumbaPendingDeprecationWarning
-# import warnings
-# warnings.simplefilter('ignore', category=NumbaDeprecationWarning)
-# warnings.simplefilter('ignore', category=NumbaPendingDeprecationWarning)
 
 # jiwer
 import jiwer
@@ -57,25 +51,61 @@ from library import (
 # Multi Processing Cores
 MAX_NUM_PROCS: int = psutil.cpu_count(logical=False)
 
+# Common Voice Utilities Globals
+cv: cvu.CV = cvu.CV()
+
+#
+# Whisper Models
+#
+
+model_dir: str = os.path.join(HERE, "data", "models", "default")
+WModel: whisper.Whisper
+LoadedModel: str = ""
+DeviceMode: str = "cuda" if conf.USE_GPU else "cpu"
+
+def loadModel(requestedModel: str):
+    global model_dir
+    global LoadedModel
+    global WModel
+    global DeviceMode
+
+    device: str = "cuda" if conf.USE_GPU else "cpu"
+
+    if LoadedModel != requestedModel:
+        print("==> Loading Model:", requestedModel)
+        LoadedModel = requestedModel
+        WModel = whisper.load_model(name=LoadedModel, device=DeviceMode, download_root=model_dir)
+        print("==> Model Loaded:", requestedModel)
+
+
 #
 # Locale handling (multiprocessed)
 #
 
-
 def handle_locale(model_name: str, diff_path: str) -> AggregationRec:
     """Handle a single locale (multiprocess)"""
+    global WModel
+
     start_locale: datetime = datetime.now()
     # get dir
     locale_path: str = os.path.split(diff_path)[0]
-    lc_tsv: str = os.path.split(diff_path)[1]
     lc: str = locale_path.split(os.sep)[-1]
     dest_path: str = os.path.join(HERE, "data", "results", model_name, lc + ".tsv")
+    trans_path: str = os.path.join(HERE, "data", "results", model_name, lc + ".txt")
+    # print("Processing:", lc)
 
-    model_dir: str = os.path.join(HERE, "data", "models", "default")
-    model: whisper.Whisper = whisper.load_model(name=model_name, download_root=model_dir) # , in_memory=True
+    # model: whisper.Whisper = whisper.load_model(name=model_name, download_root=model_dir) # , in_memory=True
+    loadModel(model_name) # , in_memory=True
 
-    # get diff dataframe as result and expand it with new columns
+    # get diff dataframe
     source_df: pd.DataFrame = df_read(diff_path)
+
+    # Normalizer
+    v = cvu.Validator(lc)
+
+    # File for full trabscription results
+    trans_file =  open(trans_path, "w", encoding="utf8")
+    trans_file.write("[\n")
 
     results: list[TranscriptionRec] = []
     # Loop through each record
@@ -84,14 +114,20 @@ def handle_locale(model_name: str, diff_path: str) -> AggregationRec:
         result: TranscriptionRec = row.to_dict()  # type: ignore
         audio_path: str = os.path.join(locale_path, "clips", row["path"])
         start_transcription: datetime = datetime.now()
-        transcription_result: WhisperTranscriptionResult = whisper.transcribe(model, audio_path)  # type: ignore
+        transcription_result: WhisperTranscriptionResult = whisper.transcribe(model=WModel, audio=audio_path)  # type: ignore
         result["item_inference_duration"] = (datetime.now() - start_transcription).total_seconds()
-        result["transcription"] = transcription_result["text"].strip()
+        trans_file.write(json.dumps(transcription_result, ensure_ascii=False) + "\n") # save detailed response
+        transcription_txt: str = transcription_result["text"].strip()
+        isOK, norm_transcription_txt = v.normalise(transcription_txt)
+        result["transcription"] = transcription_txt
+        result["norm_transcription"] = norm_transcription_txt
         # result["segments"] = transcription_result["segments"]
         result["detected_lc"] = transcription_result["language"]
-        j_word: jiwer.WordOutput = jiwer.process_words(reference=row["sentence"], hypothesis=result["transcription"])
+        result["rtf"] = result["item_inference_duration"] / float(result["duration"])
+
+        j_word: jiwer.WordOutput = jiwer.process_words(reference=row["norm_sentence"], hypothesis=norm_transcription_txt)
         j_char: jiwer.CharacterOutput = jiwer.process_characters(
-            reference=row["sentence"], hypothesis=result["transcription"]
+            reference=row["norm_sentence"], hypothesis=norm_transcription_txt
         )
         result["cer"] = j_char.cer
         result["wer"] = j_word.wer
@@ -102,6 +138,8 @@ def handle_locale(model_name: str, diff_path: str) -> AggregationRec:
         results.append(result)  # type: ignore
 
     # save locale results for this model
+    trans_file.write("]\n")
+    trans_file.close()
     results_df: pd.DataFrame = pd.DataFrame.from_records(results, columns=c.TRANSCRIPTION_REC_COLS)
     df_write(results_df, dest_path)
 
@@ -117,6 +155,7 @@ def handle_locale(model_name: str, diff_path: str) -> AggregationRec:
         "avg_mer": results_df["mer"].mean(),
         "avg_wil": results_df["wil"].mean(),
         "avg_wip": results_df["wip"].mean(),
+        "avg_rtf": results_df["rtf"].mean()
     }
     print(
         f"Finished LC={lc} for {agg_result['num_sentences']} sentences in {agg_result['total_duration']} secs. Avg CER={agg_result['avg_cer']} Avg WER={agg_result['avg_wer']}"
@@ -127,11 +166,8 @@ def handle_locale(model_name: str, diff_path: str) -> AggregationRec:
 #
 # MODEL HANDLER
 #
-def handle_model(model_name: str):
+def handle_model(model_name: str) -> None:
     print(f"==> Test run whisper model: {model_name}")
-    # get the model
-    model_dir: str = os.path.join(HERE, "data", "models", "default")
-    # model: whisper.Whisper = whisper.load_model(name=model_name, download_root=model_dir, in_memory=True)
     # get a list of source test files
     diff_files: list[str] = glob.glob(os.path.join(HERE, "data", "cv-delta", "**", c.DIFF_FN), recursive=True)
     diff_files.sort()
@@ -139,10 +175,10 @@ def handle_model(model_name: str):
     dest_path: str = os.path.join(HERE, "data", "results", model_name)
     os.makedirs(dest_path, exist_ok=True)
 
+    # Model
+    loadModel(model_name) # , in_memory=True
+
     # input records
-    # inputs: list[HandleLocaleProps] = []
-    # for p in diff_files:
-    #     inputs.append({"model_name": model_name, "model": model, "diff_path": p})
     args = []
     for p in diff_files:
         args.append((model_name, p))
@@ -150,7 +186,7 @@ def handle_model(model_name: str):
     # run them in parallel
     results: list[AggregationRec] = []
     
-    # results.append(handle_locale(model_name, diff_files[48])) # Single test
+    # results.append(handle_locale(model_name, diff_files[51])) # Single test
 
     # Decide on concurrency
     NUM_PROCS: int = min(
@@ -162,7 +198,7 @@ def handle_model(model_name: str):
         results = pool.starmap(handle_locale, args)
 
     results_df: pd.DataFrame = pd.DataFrame.from_records(results, columns=c.AGGREGATION_REC_COLS)
-    df_write(results_df, os.path.join(HERE, "data", "results", model_name + "_summary.tsv"))
+    df_write(results_df, os.path.join(HERE, "data", "results", f"{model_name}_summary.tsv"))
 
 #
 # MAIN PROCESS
@@ -177,6 +213,7 @@ def main() -> None:
     )
     for model_name in conf.WHISPER_MODELS_TO_TEST:
         handle_model(model_name)
+    # combine results
 
 
 # Entry point
