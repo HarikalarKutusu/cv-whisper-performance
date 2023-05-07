@@ -53,13 +53,11 @@ def lc_back_mapper(lc: str):
         return lc
 
 
-def decN(x: float, n: int) -> float:
-    N = 10**n
-    return int(N * x) / N
-
-
 def dec2(x: float) -> float:
     return int(100 * x) / 100
+
+def dec6(x: float) -> float:
+    return int(1000000 * x) / 1000000
 
 
 #
@@ -139,17 +137,21 @@ class TranscriptionRec(TypedDict):
     norm_sentence: str  # Normalized sentence
     norm_sentence_len: str  # Length
     duration: str  # Audio duration
+    char_speed: float
 
     transcription: str
     norm_transcription: str
     detected_lc: str
+
     cer: float
     wer: float
     mer: float
     wil: float
     wip: float
+
     item_inference_duration: float
     item_total_duration: float
+
     rtf: float
 
 
@@ -157,6 +159,8 @@ class AggregationRec(TypedDict):
     model: str
     lc: str
     num_sentences: int
+    duration: float
+    avg_char_speed: float
     inference_duration: float
     total_duration: float
     avg_cer: float
