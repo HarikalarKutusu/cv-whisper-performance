@@ -18,19 +18,22 @@ import os
 
 # Base location of tsv files for Common Voice v9.0
 CV9_DIR: str = os.path.join(
-    "C:", os.sep, "GITREPO", "_HK_GITHUB", "_cv_tbox", "cv-tbox-dataset-compiler",
-    "data", "voice-corpus", "cv-corpus-9.0-2022-04-27"
-    )
+    "C:",
+    os.sep,
+    "GITREPO",
+    "_HK_GITHUB",
+    "_cv_tbox",
+    "cv-tbox-dataset-compiler",
+    "data",
+    "voice-corpus",
+    "cv-corpus-9.0-2022-04-27",
+)
 
 # Base location of tsv & audio files for Common Voice v13.0
-CV_LATEST_DIR: str = os.path.join(
-    "M:", os.sep, "DATASETS", "CV", "cv-corpus-13.0-2023-03-09"
-    )
+CV_LATEST_DIR: str = os.path.join("M:", os.sep, "DATASETS", "CV", "cv-corpus-13.0-2023-03-09")
 
 # Base location of whisper model files
-WHISPER_MODEL_DIR: str = os.path.join(
-    "M:", os.sep, "__STATIC", "_DATASETS", "VOICE", "WHISPER_MODELS"
-    )
+WHISPER_MODEL_DIR: str = os.path.join("M:", os.sep, "__STATIC", "_DATASETS", "VOICE", "WHISPER_MODELS")
 
 #
 # Test settings
@@ -47,7 +50,7 @@ UNIQUE_VOICES_ONLY_IF_AVAILABLE: bool = True
 
 # Force exclude languages (TO)
 EXCLUDED_LANGUAGES: list[str] = [
-    "is",   # no validated data in v13.0
+    "is",  # no validated data in v13.0
 ]
 
 # List of whisper models to test against
@@ -69,5 +72,7 @@ FAIL_ON_NOT_FOUND: bool = True
 #
 # GPU
 #
-#VRAM in GB
+# For GPU usage, set to True, for CPU set to False
+USE_GPU: bool = True
+# Your VRAM in GB
 VRAM: int = 24
