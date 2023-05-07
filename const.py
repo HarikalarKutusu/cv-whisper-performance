@@ -117,6 +117,8 @@ AGGREGATION_REC_COLS: list[str] = [
     "model",
     "lc",
     "num_sentences",
+    "duration",
+    "avg_char_speed",
     "inference_duration",
     "total_duration",
     "avg_cer",
@@ -124,4 +126,5 @@ AGGREGATION_REC_COLS: list[str] = [
     "avg_mer",
     "avg_wil",
     "avg_wip",
+    "avg_rtf",
 ]

@@ -42,6 +42,8 @@ from library import (
     AggregationRec,
     HandleLocaleProps,
     WhisperTranscriptionResult,
+    dec2,
+    dec6,
     df_read,
     df_write,
     CommonVoiceRec,
@@ -72,7 +74,6 @@ def loadModel(requestedModel: str):
     device: str = "cuda" if conf.USE_GPU else "cpu"
 
     if LoadedModel != requestedModel:
-        print("==> Loading Model:", requestedModel)
         LoadedModel = requestedModel
         WModel = whisper.load_model(name=LoadedModel, device=DeviceMode, download_root=model_dir)
         print("==> Model Loaded:", requestedModel)
@@ -148,14 +149,16 @@ def handle_locale(model_name: str, diff_path: str) -> AggregationRec:
         "model": model_name,
         "lc": lc,
         "num_sentences": results_df.shape[0],
-        "inference_duration": results_df["item_inference_duration"].sum(),
-        "total_duration": (datetime.now() - start_locale).total_seconds(),
-        "avg_cer": results_df["cer"].mean(),
-        "avg_wer": results_df["wer"].mean(),
-        "avg_mer": results_df["mer"].mean(),
-        "avg_wil": results_df["wil"].mean(),
-        "avg_wip": results_df["wip"].mean(),
-        "avg_rtf": results_df["rtf"].mean()
+        "duration": results_df["duration"].sum(),
+        "avg_char_speed": dec2(results_df["char_speed"].mean()),
+        "inference_duration": dec2(results_df["item_inference_duration"].sum()),
+        "total_duration": dec2((datetime.now() - start_locale).total_seconds()),
+        "avg_cer": dec6(results_df["cer"].mean()),
+        "avg_wer": dec6(results_df["wer"].mean()),
+        "avg_mer": dec6(results_df["mer"].mean()),
+        "avg_wil": dec6(results_df["wil"].mean()),
+        "avg_wip": dec6(results_df["wip"].mean()),
+        "avg_rtf": dec6(results_df["rtf"].mean())
     }
     print(
         f"Finished LC={lc} for {agg_result['num_sentences']} sentences in {agg_result['total_duration']} secs. Avg CER={agg_result['avg_cer']} Avg WER={agg_result['avg_wer']}"
@@ -175,9 +178,6 @@ def handle_model(model_name: str) -> None:
     dest_path: str = os.path.join(HERE, "data", "results", model_name)
     os.makedirs(dest_path, exist_ok=True)
 
-    # Model
-    loadModel(model_name) # , in_memory=True
-
     # input records
     args = []
     for p in diff_files:
@@ -194,6 +194,7 @@ def handle_model(model_name: str) -> None:
         MAX_NUM_PROCS
         )
 
+    print(f"==> Using {NUM_PROCS} processes...")
     with mp.Pool(NUM_PROCS) as pool:
         results = pool.starmap(handle_locale, args)
 
