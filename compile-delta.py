@@ -3,10 +3,11 @@
 #
 # Compile a delta dataset for whisper supported languages
 # - Take difference of validated.tsv in v13.0 and validated.tsv in v9.0 (whisper is based on this)
-# - Sort text by desc length
-# - Take the longest MAX_DELTA_SIZE (default 1000) unique texts
-# - Output to data/cv-delta/[lc]/delta.tsv
+# - Sort text by desc length, do some bias prevention, normalization & some calculations
+# - Take the longest MAX_DELTA_SIZE (default 100) unique texts
+# - Output to data/cv-delta/[lc]/diff.tsv
 # - Copy related audio to data/cv-delta/[lc]/clips/*.mp3
+# - Put aggregated results in data/cv-delta
 #
 # This script is part of Common Voice ToolBox Package
 #
