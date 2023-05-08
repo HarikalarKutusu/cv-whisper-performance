@@ -13,10 +13,17 @@
 import os
 
 #
-# Directories
+# Common Voice Directories, needed for compile-delta.py script
 #
 
 # Base location of tsv files for Common Voice v9.0
+# We only need the validated.tsv files in the locale directories.
+# As whisper is trained on CV v9.0, we need to exclude them from tests to prevent bias.
+# You can get the TSV only files from Common Voice Dataset Analyzer application:
+# - Visit https://analyzer.cv-toolbox.web.tr/
+# - From the dataset browser select the locale's v9.0 dataset
+# - Use the download button labeled "s1" to download
+# - Expand it under "cv-corpus-9.0-2022-04-27/<lc>"
 CV9_DIR: str = os.path.join(
     "C:",
     os.sep,
@@ -29,17 +36,14 @@ CV9_DIR: str = os.path.join(
     "cv-corpus-9.0-2022-04-27",
 )
 
-# Base location of tsv & audio files for Common Voice v13.0
+# Base location of tsv & audio files for latest Common Voice (currently v13.0)
 CV_LATEST_DIR: str = os.path.join("M:", os.sep, "DATASETS", "CV", "cv-corpus-13.0-2023-03-09")
-
-# Base location of whisper model files
-WHISPER_MODEL_DIR: str = os.path.join("M:", os.sep, "__STATIC", "_DATASETS", "VOICE", "WHISPER_MODELS")
 
 #
 # Test settings
 #
 
-# compile-delta.py - Test set size
+# compile-delta.py - Test set maximumn size
 MAX_DELTA_SIZE: int = 100
 
 # compile-delta.py - Bias removal related
@@ -54,6 +58,9 @@ EXCLUDED_LANGUAGES: list[str] = [
 ]
 
 # List of whisper models to test against
+# Each test runs for 30 min - 3 hours on a 6*2 core CPU & rtx-3090
+# So you might want to run these one by one, or multiple for overnight
+# If you are only interested for a specific one, just uncomment it
 WHISPER_MODELS_TO_TEST: list[str] = [
     "tiny",
     # "base",
@@ -66,13 +73,15 @@ WHISPER_MODELS_TO_TEST: list[str] = [
 #
 # Program parameters
 #
-VERBOSE: bool = False
-FAIL_ON_NOT_FOUND: bool = True
+
+VERBOSE: bool = False               # If true, more will be printed on the console
+FAIL_ON_NOT_FOUND: bool = True      # Fail process if dataset is not found
 
 #
 # GPU
 #
+
 # For GPU usage, set to True, for CPU set to False
 USE_GPU: bool = True
-# Your VRAM in GB
+# Your VRAM size in GB, we predict max processes to prevent memory full errors
 VRAM: int = 24
