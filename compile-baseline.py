@@ -149,7 +149,7 @@ def handle_locale(model_name: str, diff_path: str) -> AggregationRec:
         "model": model_name,
         "lc": lc,
         "num_sentences": results_df.shape[0],
-        "duration": results_df["duration"].sum(),
+        "duration": dec2(results_df["duration"].sum()),
         "avg_char_speed": dec2(results_df["char_speed"].mean()),
         "inference_duration": dec2(results_df["item_inference_duration"].sum()),
         "total_duration": dec2((datetime.now() - start_locale).total_seconds()),
