@@ -21,6 +21,8 @@ import pandas as pd
 
 # whisper
 import whisper
+import logging
+logging.getLogger("whisper").setLevel(logging.ERROR)  # get rid of warnings
 
 # jiwer
 import jiwer
@@ -41,15 +43,14 @@ import config as conf
 import const as c
 from library import (
     AggregationRec,
-    HandleLocaleProps,
     WhisperTranscriptionResult,
+    TranscriptionRec,
+    df_read,
+    df_write,
     bytes2gb,
     dec2,
     dec6,
-    df_read,
-    df_write,
-    CommonVoiceRec,
-    TranscriptionRec,
+    lc_back_mapper,
 )
 
 # Multi Processing Cores
@@ -113,6 +114,41 @@ def handle_locale(model_name: str, diff_path: str) -> AggregationRec:
     trans_file =  open(trans_path, "w", encoding="utf8")
     trans_file.write("[\n")
 
+    whisper_lc: str = lc_back_mapper(lc)
+
+    # # sampling-related options
+    # temperature: float = 0.0
+    # sample_len: Optional[int] = None  # maximum number of tokens to sample
+    # best_of: Optional[int] = None  # number of independent sample trajectories, if t > 0
+    # beam_size: Optional[int] = None  # number of beams in beam search, if t == 0
+    # patience: Optional[float] = None  # patience in beam search (arxiv:2204.05424)
+
+    # # "alpha" in Google NMT, or None for length norm, when ranking generations
+    # # to select which to return among the beams or best-of-N samples
+    # length_penalty: Optional[float] = None
+
+    # # text or tokens to feed as the prompt or the prefix; for more info:
+    # # https://github.com/openai/whisper/discussions/117#discussioncomment-3727051
+    # prompt: Optional[Union[str, List[int]]] = None  # for the previous context
+    # prefix: Optional[Union[str, List[int]]] = None  # to prefix the current context
+
+    # # list of tokens ids (or comma-separated token ids) to suppress
+    # # "-1" will suppress a set of symbols as defined in `tokenizer.non_speech_tokens()`
+    # suppress_tokens: Optional[Union[str, Iterable[int]]] = "-1"
+    # suppress_blank: bool = True  # this will suppress blank outputs
+
+    # # timestamp sampling options
+    # without_timestamps: bool = False  # use <|notimestamps|> to sample text tokens only
+    # max_initial_timestamp: Optional[float] = 1.0
+
+    options = dict(
+        task="transcribe",
+        language=whisper_lc,
+        fp16=conf.USE_GPU,
+        beam_size=5,
+        best_of=5
+    )
+
     results: list[TranscriptionRec] = []
     # Loop through each record
     for inx, row in source_df.iterrows():
@@ -120,9 +156,13 @@ def handle_locale(model_name: str, diff_path: str) -> AggregationRec:
         result: TranscriptionRec = row.to_dict()  # type: ignore
         audio_path: str = os.path.join(locale_path, "clips", row["path"])
         start_transcription: datetime = datetime.now()
-        transcription_result: WhisperTranscriptionResult = whisper.transcribe(model=WModel, audio=audio_path)  # type: ignore
+        transcription_result: WhisperTranscriptionResult = whisper.transcribe(
+            model=WModel,
+            audio=audio_path,
+            **options
+        )  # type: ignore
         result["item_inference_duration"] = (datetime.now() - start_transcription).total_seconds()
-        trans_file.write(json.dumps(transcription_result, ensure_ascii=False) + "\n") # save detailed response
+        trans_file.write(json.dumps(transcription_result, ensure_ascii=False) + ",\n") # save detailed response
         transcription_txt: str = transcription_result["text"].strip()
         isOK, norm_transcription_txt = v.normalise(transcription_txt)
         result["transcription"] = transcription_txt
@@ -194,11 +234,16 @@ def handle_model(model_name: str) -> None:
     # results.append(handle_locale(model_name, diff_files[51])) # Single test
 
     # Decide on concurrency
-    vram_gb: float = bytes2gb(torch.cuda.mem_get_info(conf.GPU)[1])
-    NUM_PROCS: int = min(
-        int(vram_gb / c.WHISPER_MODEL_VRAM[model_name]),
-        MAX_NUM_PROCS
-        )
+    NUM_PROCS: int
+    if conf.USE_GPU:
+        vram_gb: float = bytes2gb(torch.cuda.mem_get_info(conf.GPU)[1])
+        NUM_PROCS = min(
+            int(vram_gb / c.WHISPER_MODEL_VRAM[model_name]),
+            MAX_NUM_PROCS
+            )
+    else: # whisper already uses concurrency on CPU, so not overload
+        NUM_PROCS = min(2, psutil.cpu_count(logical=False))
+
 
     print(f"==> Using {NUM_PROCS} processes...")
     with mp.Pool(NUM_PROCS) as pool:
