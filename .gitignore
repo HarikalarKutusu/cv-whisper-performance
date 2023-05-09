@@ -1,4 +1,5 @@
 # Custom
+.saved
 data
 !data/**/.git*
 
