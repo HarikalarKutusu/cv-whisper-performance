@@ -16,26 +16,6 @@ import os
 # Common Voice Directories, needed for compile-delta.py script
 #
 
-# Base location of tsv files for Common Voice v9.0
-# We only need the validated.tsv files in the locale directories.
-# As whisper is trained on CV v9.0, we need to exclude them from tests to prevent bias.
-# You can get the TSV only files from Common Voice Dataset Analyzer application:
-# - Visit https://analyzer.cv-toolbox.web.tr/
-# - From the dataset browser select the locale's v9.0 dataset
-# - Use the download button labeled "s1" to download
-# - Expand it under "cv-corpus-9.0-2022-04-27/<lc>"
-CV9_DIR: str = os.path.join(
-    "C:",
-    os.sep,
-    "GITREPO",
-    "_HK_GITHUB",
-    "_cv_tbox",
-    "cv-tbox-dataset-compiler",
-    "data",
-    "voice-corpus",
-    "cv-corpus-9.0-2022-04-27",
-)
-
 # Base location of tsv & audio files for latest Common Voice (currently v13.0)
 CV_LATEST_DIR: str = os.path.join("M:", os.sep, "DATASETS", "CV", "cv-corpus-13.0-2023-03-09")
 
@@ -54,8 +34,8 @@ WHISPER_MODELS_DIR: str = "default"
 # So you might want to run these one by one, or multiple for overnight
 # If you are only interested for a specific one, just uncomment it
 WHISPER_MODELS_TO_TEST: list[str] = [
-    "tiny",
-    # "base",
+    # "tiny",
+    "base",
     # "small",
     # "medium",
     # "large-v1",
@@ -68,7 +48,7 @@ WHISPER_MODELS_TO_TEST: list[str] = [
 #
 
 # Subdir in data/results
-EXPERIMENT: str = "baseline-gpu"
+EXPERIMENT: str = "baseline-cpu"
 
 # compile-delta.py - Test set maximumn size
 MAX_DELTA_SIZE: int = 100
@@ -101,6 +81,6 @@ FAIL_ON_NOT_FOUND: bool = True      # Fail process if dataset is not found
 #
 
 # For GPU usage, set to True, for CPU set to False
-USE_GPU: bool = True
+USE_GPU: bool = False
 # Your VRAM size in GB, we predict max processes to prevent memory full errors
 GPU: int = 0
