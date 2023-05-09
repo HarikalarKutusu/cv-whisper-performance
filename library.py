@@ -46,7 +46,7 @@ def lc_mapper(lc: str) -> str:
         return lc
 
 
-def lc_back_mapper(lc: str):
+def lc_back_mapper(lc: str) -> str:
     if lc in c.BACK_MAPPER.keys():
         return c.BACK_MAPPER[lc]
     else:
