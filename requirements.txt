@@ -2,5 +2,6 @@ pandas
 psutil
 jiwer
 av
+progressbar2
 git+https://github.com/ftyers/commonvoice-utils.git
 git+https://github.com/openai/whisper.git
