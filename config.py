@@ -40,22 +40,14 @@ CV9_DIR: str = os.path.join(
 CV_LATEST_DIR: str = os.path.join("M:", os.sep, "DATASETS", "CV", "cv-corpus-13.0-2023-03-09")
 
 #
-# Test settings
+# Whisper model related settings
 #
 
-# compile-delta.py - Test set maximumn size
-MAX_DELTA_SIZE: int = 100
-
-# compile-delta.py - Bias removal related
-UNIQUE_SENTENCES: bool = True
-UNIQUE_SENTENCES_ONLY_IF_AVAILABLE: bool = True
-UNIQUE_VOICES: bool = True
-UNIQUE_VOICES_ONLY_IF_AVAILABLE: bool = True
-
-# Force exclude languages (TO)
-EXCLUDED_LANGUAGES: list[str] = [
-    "is",  # no validated data in v13.0
-]
+# This is the subdir where the model resides under data/models
+# You can put custom models in other subdirs and look for them
+# E.g. you can create small-en, small-de etc into "test" sub dir and set WHISPER_MODELS_DIR to "test"
+# This time, you should use 
+WHISPER_MODELS_DIR: str = "default"
 
 # List of whisper models to test against
 # Each test runs for 30 min - 3 hours on a 6*2 core CPU & rtx-3090
@@ -68,6 +60,33 @@ WHISPER_MODELS_TO_TEST: list[str] = [
     # "medium",
     # "large-v1",
     # "large-v2",
+]
+
+
+#
+# Test settings
+#
+
+# Subdir in data/results
+EXPERIMENT: str = "baseline-gpu"
+
+# compile-delta.py - Test set maximumn size
+MAX_DELTA_SIZE: int = 100
+
+# compile-delta.py - Bias removal related
+UNIQUE_SENTENCES: bool = True
+UNIQUE_SENTENCES_ONLY_IF_AVAILABLE: bool = True
+UNIQUE_VOICES: bool = True
+UNIQUE_VOICES_ONLY_IF_AVAILABLE: bool = True
+
+# Forced include languages to only process for them (keep empty for all)
+INCLUDE_LANGUAGES: list[str] = [
+    "tr",
+]
+
+# Force exclude languages (if )
+EXCLUDED_LANGUAGES: list[str] = [
+    "is",  # no validated data in v13.0
 ]
 
 #
@@ -84,4 +103,4 @@ FAIL_ON_NOT_FOUND: bool = True      # Fail process if dataset is not found
 # For GPU usage, set to True, for CPU set to False
 USE_GPU: bool = True
 # Your VRAM size in GB, we predict max processes to prevent memory full errors
-VRAM: int = 24
+GPU: int = 0

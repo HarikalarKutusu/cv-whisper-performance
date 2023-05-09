@@ -15,6 +15,7 @@ from datetime import datetime, timedelta
 from typing import Any
 from collections import Counter
 
+import torch
 import numpy as np
 import pandas as pd
 
@@ -42,6 +43,7 @@ from library import (
     AggregationRec,
     HandleLocaleProps,
     WhisperTranscriptionResult,
+    bytes2gb,
     dec2,
     dec6,
     df_read,
@@ -60,22 +62,24 @@ cv: cvu.CV = cvu.CV()
 # Whisper Models
 #
 
-model_dir: str = os.path.join(HERE, "data", "models", "default")
+model_dir: str = os.path.join(HERE, "data", "models", conf.WHISPER_MODELS_DIR)
 WModel: whisper.Whisper
 LoadedModel: str = ""
 DeviceMode: str = "cuda" if conf.USE_GPU else "cpu"
 
-def loadModel(requestedModel: str):
+def loadModel(requestedModel: str) -> None:
     global model_dir
     global LoadedModel
     global WModel
     global DeviceMode
 
-    device: str = "cuda" if conf.USE_GPU else "cpu"
-
     if LoadedModel != requestedModel:
         LoadedModel = requestedModel
-        WModel = whisper.load_model(name=LoadedModel, device=DeviceMode, download_root=model_dir)
+        WModel = whisper.load_model(
+            name=LoadedModel,
+            device=DeviceMode,
+            download_root=model_dir
+            )
         print("==> Model Loaded:", requestedModel)
 
 
@@ -91,8 +95,9 @@ def handle_locale(model_name: str, diff_path: str) -> AggregationRec:
     # get dir
     locale_path: str = os.path.split(diff_path)[0]
     lc: str = locale_path.split(os.sep)[-1]
-    dest_path: str = os.path.join(HERE, "data", "results", model_name, lc + ".tsv")
-    trans_path: str = os.path.join(HERE, "data", "results", model_name, lc + ".txt")
+    dest_dir: str = os.path.join(HERE, "data", "experiments", conf.EXPERIMENT)
+    dest_path: str = os.path.join(dest_dir, model_name, lc + ".tsv")
+    trans_path: str = os.path.join(dest_dir, model_name, lc + ".json")
     # print("Processing:", lc)
 
     # model: whisper.Whisper = whisper.load_model(name=model_name, download_root=model_dir) # , in_memory=True
@@ -175,7 +180,7 @@ def handle_model(model_name: str) -> None:
     diff_files: list[str] = glob.glob(os.path.join(HERE, "data", "cv-delta", "**", c.DIFF_FN), recursive=True)
     diff_files.sort()
     # create destination dir
-    dest_path: str = os.path.join(HERE, "data", "results", model_name)
+    dest_path: str = os.path.join(HERE, "data", "experiments", conf.EXPERIMENT, model_name)
     os.makedirs(dest_path, exist_ok=True)
 
     # input records
@@ -189,8 +194,9 @@ def handle_model(model_name: str) -> None:
     # results.append(handle_locale(model_name, diff_files[51])) # Single test
 
     # Decide on concurrency
+    vram_gb: float = bytes2gb(torch.cuda.mem_get_info(conf.GPU)[1])
     NUM_PROCS: int = min(
-        int(conf.VRAM / c.WHISPER_MODEL_VRAM[model_name]),
+        int(vram_gb / c.WHISPER_MODEL_VRAM[model_name]),
         MAX_NUM_PROCS
         )
 
@@ -199,7 +205,7 @@ def handle_model(model_name: str) -> None:
         results = pool.starmap(handle_locale, args)
 
     results_df: pd.DataFrame = pd.DataFrame.from_records(results, columns=c.AGGREGATION_REC_COLS)
-    df_write(results_df, os.path.join(HERE, "data", "results", f"{model_name}_summary.tsv"))
+    df_write(results_df, os.path.join(HERE, "data", "experiments", conf.EXPERIMENT, f"{model_name}_summary.tsv"))
 
 #
 # MAIN PROCESS
