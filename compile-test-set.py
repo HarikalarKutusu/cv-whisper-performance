@@ -60,18 +60,12 @@ def handle_locale(lc: str) -> DeltaResult:
     """Handle a single locale (multiprocess). LC is in CV terms."""
     # print("Started:", lc)
     # precalc paths
-    cv9_validated: str = os.path.join(conf.CV9_DIR, lc, "validated.tsv")
     _cv_latest_path: str = os.path.join(conf.CV_LATEST_DIR, lc)
     cv_latest_validated: str = os.path.join(_cv_latest_path, "validated.tsv")
     cv_latest_audio_path: str = os.path.join(_cv_latest_path, "clips")
 
-    # get validated dataframes. cv9 might not exist, latest cv should exist
-    if os.path.isfile(cv9_validated):
-        ext_df: pd.DataFrame = pd.concat([df_read(cv9_validated), df_read(cv_latest_validated)]).drop_duplicates(
-            keep=False
-        )  # this keeps only new ones
-    else:
-        ext_df: pd.DataFrame = df_read(cv_latest_validated)
+    # get validated dataframes from lates CV release
+    ext_df: pd.DataFrame = df_read(cv_latest_validated)
 
     # Remove duplicate sentences & voices for less bias - if required (set in config.py)
     # These might reduce the size of the test set for
@@ -114,7 +108,7 @@ def handle_locale(lc: str) -> DeltaResult:
             cnt += 1
         else:
             ext_df.at[inx, "norm_sentence"] = np.nan
-        if cnt >= conf.MAX_DELTA_SIZE:
+        if cnt > conf.MAX_DELTA_SIZE:
             break  # we've got enough samples
 
     ext_df.dropna(subset=["norm_sentence"], inplace=True)  # drop invalidated ones
@@ -123,7 +117,7 @@ def handle_locale(lc: str) -> DeltaResult:
     ext_df = ext_df.head(conf.MAX_DELTA_SIZE).reset_index(drop=True)
 
     # create destination
-    dest_path: str = os.path.join(HERE, "data", "cv-delta", lc)
+    dest_path: str = os.path.join(HERE, "data", "test", conf.EXPERIMENT, lc)
     dest_clips_path: str = os.path.join(dest_path, "clips")
     os.makedirs(dest_clips_path, exist_ok=True)
 
@@ -193,13 +187,9 @@ def main() -> None:
             print("Skipped:", lc, mapped_lc)
 
     print(f"==> Skipped {len(c.WHISPER_LC) - len(lc_list)} locales as they do not exist in CV/Validator...")
-    # print(f"==> FINAL {len(lc_list)} locales...", lc_list)
 
     # Test
     result_list: list[DeltaResult] = []
-
-    # result_list.append(handle_locale(lc_list[6])) # single process for testing
-    # lc_list=["bn"]
 
     # Multiprocess each locale
     print(f"==> Processing remaining {len(lc_list)} locales...")
