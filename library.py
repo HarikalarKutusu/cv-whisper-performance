@@ -54,11 +54,13 @@ def lc_back_mapper(lc: str):
 
 
 def dec2(x: float) -> float:
-    return int(100 * x) / 100
+    return round(x, 2)
 
 def dec6(x: float) -> float:
-    return int(1000000 * x) / 1000000
+    return round(x, 6)
 
+def bytes2gb(mem: int) -> float:
+    return dec2(mem / (1024 * 1024 * 1024))
 
 #
 # Type definitions
