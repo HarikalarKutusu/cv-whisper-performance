@@ -27,15 +27,15 @@ CV_LATEST_DIR: str = os.path.join("M:", os.sep, "DATASETS", "CV", "cv-corpus-13.
 # You can put custom models in other subdirs and look for them
 # E.g. you can create small-en, small-de etc into "test" sub dir and set WHISPER_MODELS_DIR to "test"
 # This time, you should use 
-WHISPER_MODELS_DIR: str = os.path.join("M:", os.sep, "__STATIC", "DATASETS", "VOICE", "WHISPER_MODELS", "default")
+WHISPER_MODELS_DIR: str = os.path.join("M:", os.sep, "__STATIC", "MODELS", "VOICE", "WHISPER", "default")
 
 # List of whisper models to test against
 # Each test runs for 30 min - 3 hours on a 6*2 core CPU & rtx-3090
 # So you might want to run these one by one, or multiple for overnight
 # If you are only interested for a specific one, just uncomment it
 WHISPER_MODELS_TO_TEST: list[str] = [
-    # "tiny",
-    "base",
+    "tiny",
+    # "base",
     # "small",
     # "medium",
     # "large-v1",
