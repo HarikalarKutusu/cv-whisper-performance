@@ -56,6 +56,7 @@ from library import (
 
 # Multi Processing Cores
 MAX_NUM_PROCS: int = psutil.cpu_count(logical=False)
+MAX_NUM_PROCS = 4
 
 # Common Voice Utilities Globals
 cv: cvu.CV = cvu.CV()
@@ -68,7 +69,6 @@ model_dir: str = conf.WHISPER_MODELS_DIR
 WModel: whisper.Whisper
 LoadedModel: str = ""
 DeviceMode: str = "cuda" if conf.USE_GPU else "cpu"
-
 
 def loadModel(requestedModel: str) -> None:
     global model_dir
