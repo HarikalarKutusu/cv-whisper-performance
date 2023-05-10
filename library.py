@@ -40,15 +40,15 @@ def df_write(df: pd.DataFrame, fpath: str) -> bool:
 
 
 def lc_mapper(lc: str) -> str:
-    if lc in c.MAPPER.keys():
-        return c.MAPPER[lc]
+    if lc in c.LC_MAPPER.keys():
+        return c.LC_MAPPER[lc]
     else:
         return lc
 
 
 def lc_back_mapper(lc: str) -> str:
-    if lc in c.BACK_MAPPER.keys():
-        return c.BACK_MAPPER[lc]
+    if lc in c.LC_BACK_MAPPER.keys():
+        return c.LC_BACK_MAPPER[lc]
     else:
         return lc
 

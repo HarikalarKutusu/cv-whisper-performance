@@ -13,7 +13,7 @@
 import os
 
 #
-# Common Voice Directories, needed for compile-delta.py script
+# Common Voice Directories, needed for compile-test-set.py script
 #
 
 # Base location of tsv & audio files for latest Common Voice (currently v13.0)
@@ -27,7 +27,7 @@ CV_LATEST_DIR: str = os.path.join("M:", os.sep, "DATASETS", "CV", "cv-corpus-13.
 # You can put custom models in other subdirs and look for them
 # E.g. you can create small-en, small-de etc into "test" sub dir and set WHISPER_MODELS_DIR to "test"
 # This time, you should use 
-WHISPER_MODELS_DIR: str = "default"
+WHISPER_MODELS_DIR: str = os.path.join("M:", os.sep, "__STATIC", "DATASETS", "VOICE", "WHISPER_MODELS", "default")
 
 # List of whisper models to test against
 # Each test runs for 30 min - 3 hours on a 6*2 core CPU & rtx-3090
@@ -46,14 +46,16 @@ WHISPER_MODELS_TO_TEST: list[str] = [
 #
 # Test settings
 #
+# Subdir in data/test
+TEST_SET: str = "longest"
 
 # Subdir in data/results
-EXPERIMENT: str = "baseline-cpu"
+EXPERIMENT: str = "baseline-gpu"
 
-# compile-delta.py - Test set maximumn size
-MAX_DELTA_SIZE: int = 100
+# compile-test-set.py - Test set maximumn size
+MAX_TEST_SIZE: int = 100
 
-# compile-delta.py - Bias removal related
+# compile-test-set.py - Bias removal related
 UNIQUE_SENTENCES: bool = True
 UNIQUE_SENTENCES_ONLY_IF_AVAILABLE: bool = True
 UNIQUE_VOICES: bool = True
@@ -81,6 +83,6 @@ FAIL_ON_NOT_FOUND: bool = True      # Fail process if dataset is not found
 #
 
 # For GPU usage, set to True, for CPU set to False
-USE_GPU: bool = False
-# Your VRAM size in GB, we predict max processes to prevent memory full errors
+USE_GPU: bool = True
+# Your GPU number if you have multiple GPU's. You can use the hw-info script to find the number.
 GPU: int = 0

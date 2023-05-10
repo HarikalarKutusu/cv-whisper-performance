@@ -64,7 +64,7 @@ cv: cvu.CV = cvu.CV()
 # Whisper Models
 #
 
-model_dir: str = os.path.join(HERE, "data", "models", conf.WHISPER_MODELS_DIR)
+model_dir: str = conf.WHISPER_MODELS_DIR
 WModel: whisper.Whisper
 LoadedModel: str = ""
 DeviceMode: str = "cuda" if conf.USE_GPU else "cpu"
@@ -95,7 +95,7 @@ def handle_locale(model_name: str, diff_path: str) -> AggregationRec:
     # get dir
     locale_path: str = os.path.split(diff_path)[0]
     lc: str = locale_path.split(os.sep)[-1]
-    dest_dir: str = os.path.join(HERE, "data", "experiments", conf.EXPERIMENT)
+    dest_dir: str = os.path.join(HERE, c.EXPERIMENTS_DIR, conf.EXPERIMENT)
     dest_path: str = os.path.join(dest_dir, model_name, lc + ".tsv")
     trans_path: str = os.path.join(dest_dir, model_name, lc + ".json")
     # print("Processing:", lc)
@@ -210,10 +210,10 @@ def handle_locale(model_name: str, diff_path: str) -> AggregationRec:
 def handle_model(model_name: str) -> None:
     print(f"==> Test run whisper model: {model_name}")
     # get a list of source test files
-    test_files: list[str] = glob.glob(os.path.join(HERE, "data", "test", conf.EXPERIMENT, "**", c.DIFF_FN), recursive=True)
+    test_files: list[str] = glob.glob(os.path.join(HERE, c.TEST_SETS_DIR, conf.TEST_SET, "**", c.TEST_FN), recursive=True)
     test_files.sort()
     # create destination dir
-    dest_path: str = os.path.join(HERE, "data", "experiments", conf.EXPERIMENT, model_name)
+    dest_path: str = os.path.join(HERE, c.EXPERIMENTS_DIR, conf.EXPERIMENT, model_name)
     os.makedirs(dest_path, exist_ok=True)
 
     # input records
@@ -239,7 +239,7 @@ def handle_model(model_name: str) -> None:
         results = pool.starmap(handle_locale, args)
 
     results_df: pd.DataFrame = pd.DataFrame.from_records(results, columns=c.AGGREGATION_REC_COLS)
-    df_write(results_df, os.path.join(HERE, "data", "experiments", conf.EXPERIMENT, f"{model_name}_summary.tsv"))
+    df_write(results_df, os.path.join(HERE, c.EXPERIMENTS_DIR, conf.EXPERIMENT, f"{model_name}_summary.tsv"))
 
 
 #

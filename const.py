@@ -10,6 +10,7 @@
 ###########################################################################
 
 # Language codes supported by whisper multilingual
+import os
 from whisper.tokenizer import LANGUAGES
 
 WHISPER_LC: list[str] = sorted(LANGUAGES.keys())
@@ -21,27 +22,34 @@ WHISPER_MODELS_ALL: list[str] = ["tiny", "base", "small", "medium", "large-v1", 
 # VRAM required for model, to calculate max concurrency
 WHISPER_MODEL_VRAM: dict[str, int] = {"tiny": 1, "base": 1, "small": 2, "medium": 5, "large-v1": 10, "large-v2": 10}
 
-MAPPER: dict[str, str] = {
+LC_MAPPER: dict[str, str] = {
     "hy": "hy-AM",
     "nn": "nn-NO",
     "pa": "pa-IN",
     "sv": "sv-SE",
 }
 
-BACK_MAPPER: dict[str, str] = {
+LC_BACK_MAPPER: dict[str, str] = {
     "hy-AM": "hy",
     "nn-NO": "nn",
     "pa-IN": "pa",
     "sv-SE": "sv",
 }
 
-# files
-DIFF_FN = "diff.tsv"
-SUMMARY_FN = "diff_summary.tsv"
+# dir names
+DATA_DIR: str = "data"
+TEST_SETS_DIR: str = os.path.join(DATA_DIR, "test-sets")
+EXPERIMENTS_DIR: str = os.path.join(DATA_DIR, "experiments")
+MODELS_DIR: str = os.path.join(DATA_DIR, "models")
+
+# file names
+TEST_FN: str = "wtest.tsv"
+SUMMARY_FN: str = "wtest_summary.tsv"
 
 #
 # DataFrame columns
 #
+
 DIFF_SUMMARY_COLS: list[str] = [
     "lc",
     "recordings",

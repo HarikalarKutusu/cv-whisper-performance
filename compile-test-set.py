@@ -1,13 +1,14 @@
 ###########################################################################
-# compile-delta.py
+# compile-test-set.py
 #
-# Compile a delta dataset for whisper supported languages
-# - Take difference of validated.tsv in v13.0 and validated.tsv in v9.0 (whisper is based on this)
+# Compile a test set for whisper & CV supported languages
+# - Find the intersection languages for whisper and common-voice latest
+# - FOR each locale:
 # - Sort text by desc length, do some bias prevention, normalization & some calculations
-# - Take the longest MAX_DELTA_SIZE (default 100) unique texts
-# - Output to data/cv-delta/[lc]/diff.tsv
-# - Copy related audio to data/cv-delta/[lc]/clips/*.mp3
-# - Put aggregated results in data/cv-delta
+# - Take the longest MAX_TEST_SIZE (default 100) unique texts
+# - Output to data/test/[experiment]/[lc]/wtest.tsv
+# - Copy related audio to data/test/[experiment]/[lc]/clips/*.mp3
+# - Put aggregated results in data/test/[experiment]
 #
 # This script is part of Common Voice ToolBox Package
 #
@@ -73,8 +74,8 @@ def handle_locale(lc: str) -> DeltaResult:
         ext_df["s_enum"], s_unique = pd.factorize(ext_df["sentence"])  # add an enumaration column for sentences
         num_uq_sentences: int = len(ext_df["s_enum"].unique())
         # conditional bias removal
-        if (num_uq_sentences >= conf.MAX_DELTA_SIZE) or (
-            num_uq_sentences < conf.MAX_DELTA_SIZE and not conf.UNIQUE_SENTENCES_ONLY_IF_AVAILABLE
+        if (num_uq_sentences >= conf.MAX_TEST_SIZE) or (
+            num_uq_sentences < conf.MAX_TEST_SIZE and not conf.UNIQUE_SENTENCES_ONLY_IF_AVAILABLE
         ):
             ext_df.drop_duplicates(subset="s_enum", keep="first", inplace=True)
         ext_df.drop(columns=["s_enum"], inplace=True)
@@ -83,8 +84,8 @@ def handle_locale(lc: str) -> DeltaResult:
         ext_df["v_enum"], v_unique = pd.factorize(ext_df["client_id"])  # add an enumaration column for client_id's
         num_uq_voices: int = len(ext_df["v_enum"].unique())
         # conditional bias removal
-        if (num_uq_voices >= conf.MAX_DELTA_SIZE) or (
-            num_uq_voices < conf.MAX_DELTA_SIZE and not conf.UNIQUE_VOICES_ONLY_IF_AVAILABLE
+        if (num_uq_voices >= conf.MAX_TEST_SIZE) or (
+            num_uq_voices < conf.MAX_TEST_SIZE and not conf.UNIQUE_VOICES_ONLY_IF_AVAILABLE
         ):
             ext_df.drop_duplicates(subset="v_enum", keep="first", inplace=True)
         ext_df.drop(columns=["v_enum"], inplace=True)
@@ -108,16 +109,16 @@ def handle_locale(lc: str) -> DeltaResult:
             cnt += 1
         else:
             ext_df.at[inx, "norm_sentence"] = np.nan
-        if cnt > conf.MAX_DELTA_SIZE:
+        if cnt > conf.MAX_TEST_SIZE:
             break  # we've got enough samples
 
     ext_df.dropna(subset=["norm_sentence"], inplace=True)  # drop invalidated ones
 
     # Get top N
-    ext_df = ext_df.head(conf.MAX_DELTA_SIZE).reset_index(drop=True)
+    ext_df = ext_df.head(conf.MAX_TEST_SIZE).reset_index(drop=True)
 
     # create destination
-    dest_path: str = os.path.join(HERE, "data", "test", conf.EXPERIMENT, lc)
+    dest_path: str = os.path.join(HERE, c.TEST_SETS_DIR, conf.TEST_SET, lc)
     dest_clips_path: str = os.path.join(dest_path, "clips")
     os.makedirs(dest_clips_path, exist_ok=True)
 
@@ -135,7 +136,7 @@ def handle_locale(lc: str) -> DeltaResult:
     ext_df["duration"] = ext_df["duration"].apply(lambda x: dec2(x))
 
     # save diff.tsv
-    df_write(ext_df, os.path.join(dest_path, c.DIFF_FN))
+    df_write(ext_df, os.path.join(dest_path, c.TEST_FN))
 
     # Report results
     recs: int = ext_df.shape[0]
@@ -197,7 +198,7 @@ def main() -> None:
         result_list = pool.map(handle_locale, lc_list)
 
     results_df: pd.DataFrame = pd.DataFrame.from_records(result_list, columns=c.DIFF_SUMMARY_COLS)
-    df_write(results_df, os.path.join(HERE, "data", "cv-delta", c.SUMMARY_FN))
+    df_write(results_df, os.path.join(HERE, c.TEST_SETS_DIR, conf.TEST_SET, c.SUMMARY_FN))
 
 
 # Entry point
