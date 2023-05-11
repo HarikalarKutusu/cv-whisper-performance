@@ -65,7 +65,7 @@ def bytes2gb(mem: int) -> float:
 #
 # Type definitions
 #
-class DeltaResult(TypedDict):
+class TestSetRec(TypedDict):
     lc: str
     recordings: int
     duration: float

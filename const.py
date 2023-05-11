@@ -50,7 +50,7 @@ SUMMARY_FN: str = "wtest_summary.tsv"
 # DataFrame columns
 #
 
-DIFF_SUMMARY_COLS: list[str] = [
+TEST_SET_SUMMARY_COLS: list[str] = [
     "lc",
     "recordings",
     "duration",

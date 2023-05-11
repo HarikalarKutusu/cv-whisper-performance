@@ -45,7 +45,7 @@ if not HERE in sys.path:
 # Application
 import config as conf
 import const as c
-from library import df_read, df_write, dec2, DeltaResult, lc_back_mapper, lc_mapper
+from library import df_read, df_write, dec2, TestSetRec, lc_back_mapper, lc_mapper
 
 # Common Voice Utilities Globals
 cv: cvu.CV = cvu.CV()
@@ -57,7 +57,7 @@ NUM_PROCS: int = psutil.cpu_count(logical=False)
 #
 # Locale handling (multiprocessed)
 #
-def handle_locale(lc: str) -> DeltaResult:
+def handle_locale(lc: str) -> TestSetRec:
     """Handle a single locale (multiprocess). LC is in CV terms."""
     # print("Started:", lc)
     # precalc paths
@@ -144,7 +144,7 @@ def handle_locale(lc: str) -> DeltaResult:
     avg_dur: float = dur / recs
     avg_char_speed: float = 1000 * dur / ext_df["norm_sentence_len"].sum()
     back_lc: str = lc_back_mapper(lc)
-    result: DeltaResult = {
+    result: TestSetRec = {
         "lc": lc if lc == back_lc else f"{lc} ({back_lc})",
         "recordings": recs,
         "duration": dec2(dur),
@@ -190,14 +190,14 @@ def main() -> None:
     print(f"==> Skipped {len(c.WHISPER_LC) - len(lc_list)} locales as they do not exist in CV/Validator...")
 
     # Test
-    result_list: list[DeltaResult] = []
+    result_list: list[TestSetRec] = []
 
     # Multiprocess each locale
     print(f"==> Processing remaining {len(lc_list)} locales...")
     with mp.Pool(NUM_PROCS) as pool:
         result_list = pool.map(handle_locale, lc_list)
 
-    results_df: pd.DataFrame = pd.DataFrame.from_records(result_list, columns=c.DIFF_SUMMARY_COLS)
+    results_df: pd.DataFrame = pd.DataFrame.from_records(result_list, columns=c.TEST_SET_SUMMARY_COLS)
     df_write(results_df, os.path.join(HERE, c.TEST_SETS_DIR, conf.TEST_SET, c.SUMMARY_FN))
 
 
