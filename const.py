@@ -18,10 +18,19 @@ WHISPER_LC: list[str] = sorted(LANGUAGES.keys())
 # List of model names to test against, see https://github.com/openai/whisper#available-models-and-languages
 # We use multi-lingual models
 WHISPER_MODEL_EXT = "pt"
-WHISPER_MODELS_ALL: list[str] = ["tiny", "base", "small", "medium", "large-v1", "large-v2"]
+WHISPER_MODELS_ALL: list[str] = ["tiny", "base", "small", "medium", "large", "large-v2", "large-v3"]
 # VRAM required for model, to calculate max concurrency
-WHISPER_MODEL_VRAM: dict[str, int] = {"tiny": 1, "base": 1, "small": 2, "medium": 5, "large-v1": 10, "large-v2": 10}
+WHISPER_MODEL_VRAM: dict[str, int] = {
+    "tiny": 1,
+    "base": 1,
+    "small": 2,
+    "medium": 5,
+    "large": 10,
+    "large-v2": 10,
+    "large-v3": 10,
+}
 
+# Map from Whisper language to CV lc code
 LC_MAPPER: dict[str, str] = {
     "hy": "hy-AM",
     "nn": "nn-NO",
@@ -29,6 +38,7 @@ LC_MAPPER: dict[str, str] = {
     "sv": "sv-SE",
 }
 
+# Map from CV lc code to Whisper language
 LC_BACK_MAPPER: dict[str, str] = {
     "hy-AM": "hy",
     "nn-NO": "nn",
