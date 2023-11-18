@@ -2,6 +2,6 @@ pandas
 psutil
 jiwer
 av
-progressbar2
-git+https://github.com/ftyers/commonvoice-utils.git
+progressbar2 == 4.3b0
+git+https://github.com/ftyers/commonvoice-utils.git@main
 git+https://github.com/openai/whisper.git
