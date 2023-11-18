@@ -1,8 +1,16 @@
-import sys, os, shutil, glob, csv
-import pandas as pd
-import whisper
+"""Whisper Performance - Library"""
+
+# Standard lib
+import os
+import sys
+import csv
 from typing import TypedDict
 
+# External dependencies
+import pandas as pd
+import whisper
+
+# Module
 import const as c
 import config as conf
 
@@ -29,9 +37,7 @@ def df_read(fpath: str) -> pd.DataFrame:
 
 
 def df_write(df: pd.DataFrame, fpath: str) -> bool:
-    """
-    Writes out a dataframe to a file.
-    """
+    """Writes out a dataframe to a file."""
     # Create/override the file
     df.to_csv(fpath, header=True, index=False, encoding="utf-8", sep="\t", escapechar="\\", quoting=csv.QUOTE_NONE)
     if conf.VERBOSE:
@@ -40,6 +46,7 @@ def df_write(df: pd.DataFrame, fpath: str) -> bool:
 
 
 def lc_mapper(lc: str) -> str:
+    """Map from Whisper language to CV lc code"""
     if lc in c.LC_MAPPER.keys():
         return c.LC_MAPPER[lc]
     else:
@@ -47,6 +54,7 @@ def lc_mapper(lc: str) -> str:
 
 
 def lc_back_mapper(lc: str) -> str:
+    """Map from CV lc code to Whisper language"""
     if lc in c.LC_BACK_MAPPER.keys():
         return c.LC_BACK_MAPPER[lc]
     else:
@@ -54,13 +62,19 @@ def lc_back_mapper(lc: str) -> str:
 
 
 def dec2(x: float) -> float:
+    """Return rounded float to two decimals"""
     return round(x, 2)
 
+
 def dec6(x: float) -> float:
+    """Return rounded float to six decimals"""
     return round(x, 6)
 
+
 def bytes2gb(mem: int) -> float:
+    """Convert bytes to gigabytes with two decimals"""
     return dec2(mem / (1024 * 1024 * 1024))
+
 
 #
 # Type definitions

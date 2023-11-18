@@ -45,7 +45,7 @@ if not HERE in sys.path:
 # Application
 import config as conf
 import const as c
-from library import df_read, df_write, dec2, TestSetRec, lc_back_mapper, lc_mapper
+from lib import df_read, df_write, dec2, TestSetRec, lc_back_mapper, lc_mapper
 
 # Common Voice Utilities Globals
 cv: cvu.CV = cvu.CV()

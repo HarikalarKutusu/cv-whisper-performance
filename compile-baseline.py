@@ -42,7 +42,7 @@ if not HERE in sys.path:
 # Application
 import config as conf
 import const as c
-from library import (
+from lib import (
     AggregationRec,
     WhisperTranscriptionResult,
     TranscriptionRec,
@@ -150,7 +150,7 @@ def handle_locale(model_name: str, diff_path: str) -> AggregationRec:
         audio_path: str = os.path.join(locale_path, "clips", row["path"])
         start_transcription: datetime = datetime.now()
         transcription_result: WhisperTranscriptionResult = whisper.transcribe(
-            model=WModel, audio=audio_path, **options
+            model=WModel, audio=audio_path, decode_options=options
         )  # type: ignore
         result["item_inference_duration"] = (datetime.now() - start_transcription).total_seconds()
         trans_file.write(json.dumps(transcription_result, ensure_ascii=False) + ",\n")  # save detailed response

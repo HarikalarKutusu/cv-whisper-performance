@@ -11,7 +11,7 @@
 
 import psutil
 import torch
-from library import bytes2gb
+from lib import bytes2gb
 
 def main() -> None:
     """Main process which shows you GPU's and their capabilities."""
