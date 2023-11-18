@@ -1,7 +1,9 @@
+"""cv-tbox Whisper Performance - Hardware Info"""
+
 ###########################################################################
-# gpu-info.py
+# hw-info.py
 #
-# Tooling to get the GPU info
+# Tooling to get the hardware capabiilities of the computer
 #
 # This script is part of Common Voice ToolBox Package
 #
@@ -11,10 +13,12 @@
 
 import psutil
 import torch
-from library import bytes2gb
+from lib import bytes2gb
+
 
 def main() -> None:
     """Main process which shows you GPU's and their capabilities."""
+
     print("\n=== CPU ===")
     print(f"Real cores\t: {psutil.cpu_count(logical=False)}")
     print(f"Logical cores\t: {psutil.cpu_count(logical=True)}")
