@@ -1,4 +1,4 @@
-"""Whisper Performance - Library"""
+"""cv-tbox Whisper Performance - Constants"""
 
 # Standard lib
 import os
@@ -80,6 +80,8 @@ def bytes2gb(mem: int) -> float:
 # Type definitions
 #
 class TestSetRec(TypedDict):
+    """[TODO]"""
+
     lc: str
     recordings: int
     duration: float
@@ -90,12 +92,16 @@ class TestSetRec(TypedDict):
 
 
 class HandleLocaleProps(TypedDict):
+    """[TODO]"""
+
     model_name: str
     model: whisper.Whisper
     diff_path: str
 
 
 class CommonVoiceRec(TypedDict):
+    """[TODO]"""
+
     client_id: str
     path: str
     sentence: str
@@ -111,6 +117,8 @@ class CommonVoiceRec(TypedDict):
 
 
 class CommonVoiceExtended(TypedDict):
+    """[TODO]"""
+
     client_id: str
     path: str
     sentence: str
@@ -131,12 +139,16 @@ class CommonVoiceExtended(TypedDict):
 
 
 class WhisperTranscriptionResult(TypedDict):
+    """[TODO]"""
+
     text: str
     segments: dict
     language: str
 
 
 class TranscriptionRec(TypedDict):
+    """[TODO]"""
+
     client_id: str
     path: str
     sentence: str
@@ -172,6 +184,8 @@ class TranscriptionRec(TypedDict):
 
 
 class AggregationRec(TypedDict):
+    """[TODO]"""
+
     model: str
     lc: str
     num_sentences: int

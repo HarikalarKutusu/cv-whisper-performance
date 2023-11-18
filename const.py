@@ -1,3 +1,4 @@
+"""cv-tbox Whisper Performance - Constants"""
 ###########################################################################
 # const.py
 #
@@ -9,8 +10,10 @@
 # Copyright: (c) Bülent Özden, License: AGPL v3.0
 ###########################################################################
 
-# Language codes supported by whisper multilingual
+# Standard lib
 import os
+
+# Language codes supported by whisper multilingual
 from whisper.tokenizer import LANGUAGES
 
 WHISPER_LC: list[str] = sorted(LANGUAGES.keys())

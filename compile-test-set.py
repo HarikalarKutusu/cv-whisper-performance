@@ -1,5 +1,7 @@
+"""cv-tbox Whisper Performance - Evaluate against longest sentences in CV validated"""
+
 ###########################################################################
-# compile-test-set.py
+# compile_test_set.py
 #
 # Compile a test set for whisper & CV supported languages
 # - Find the intersection languages for whisper and common-voice latest
@@ -16,36 +18,31 @@
 # Copyright: (c) Bülent Özden, License: AGPL v3.0
 ###########################################################################
 
-import sys, os, shutil, glob, csv
-from datetime import datetime, timedelta
-from typing import Any
-from collections import Counter
-
-import numpy as np
-import pandas as pd
-
-# MultiProcessing
+# Standard lib
+import os
+import sys
+import shutil
 import multiprocessing as mp
-import psutil
-
-# Common Voice Utilities
-import cvutils as cvu
-
-# av
-import av
 import logging
 
-logging.getLogger("libav").setLevel(logging.ERROR)  # get rid of warnings
+# External dependencies
+import numpy as np
+import pandas as pd
+import psutil
+import cvutils as cvu
+import av
 
+# Module
+import config as conf
+import const as c
+from lib import TestSetRec
+from lib import df_read, df_write, dec2, lc_back_mapper, lc_mapper
 
 HERE: str = os.path.dirname(os.path.realpath(__file__))
 if not HERE in sys.path:
     sys.path.append(HERE)
 
-# Application
-import config as conf
-import const as c
-from lib import df_read, df_write, dec2, TestSetRec, lc_back_mapper, lc_mapper
+logging.getLogger("libav").setLevel(logging.ERROR)  # get rid of warnings
 
 # Common Voice Utilities Globals
 cv: cvu.CV = cvu.CV()
@@ -102,8 +99,8 @@ def handle_locale(lc: str) -> TestSetRec:
     v = cvu.Validator(lc)
     cnt: int = 0
     for inx, row in ext_df.iterrows():
-        isOK, res = v.normalise(row["sentence"])
-        if isOK:
+        is_ok, res = v.normalise(row["sentence"])
+        if is_ok:
             ext_df.at[inx, "norm_sentence"] = res
             ext_df.at[inx, "norm_sentence_len"] = len(res)
             cnt += 1
