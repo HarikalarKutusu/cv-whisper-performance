@@ -1,4 +1,4 @@
-"""cv-tbox Whisper Performance - Evaluate against longest sentences in CV validated"""
+"""cv-tbox Whisper Performance - Compile a test set for whisper & CV supported languages"""
 
 ###########################################################################
 # compile_test_set.py
@@ -8,9 +8,9 @@
 # - FOR each locale:
 # - Sort text by desc length, do some bias prevention, normalization & some calculations
 # - Take the longest MAX_TEST_SIZE (default 100) unique texts
-# - Output to data/test/[experiment]/[lc]/wtest.tsv
-# - Copy related audio to data/test/[experiment]/[lc]/clips/*.mp3
-# - Put aggregated results in data/test/[experiment]
+# - Output to data/test-sets/[experiment]/[lc]/wtest.tsv
+# - Copy related audio to data/test-sets/[experiment]/[lc]/clips/*.mp3
+# - Put aggregated results in data/test-sets/[experiment]
 #
 # This script is part of Common Voice ToolBox Package
 #
@@ -24,6 +24,8 @@ import sys
 import shutil
 import multiprocessing as mp
 import logging
+import warnings
+from typing import List
 
 # External dependencies
 import numpy as np
@@ -33,16 +35,18 @@ import cvutils as cvu
 import av
 
 # Module
-import config as conf
+import conf
 import const as c
-from lib import TestSetRec
-from lib import df_read, df_write, dec2, lc_back_mapper, lc_mapper
+from typedef import TestSetRec
+from lib import df_read, df_write, line_count, dec2, lc_back_mapper, lc_mapper
 
 HERE: str = os.path.dirname(os.path.realpath(__file__))
 if not HERE in sys.path:
     sys.path.append(HERE)
 
-logging.getLogger("libav").setLevel(logging.ERROR)  # get rid of warnings
+# get rid of warnings
+logging.getLogger("libav").setLevel(logging.ERROR)
+warnings.filterwarnings("ignore")
 
 # Common Voice Utilities Globals
 cv: cvu.CV = cvu.CV()
@@ -120,7 +124,7 @@ def handle_locale(lc: str) -> TestSetRec:
     os.makedirs(dest_clips_path, exist_ok=True)
 
     # Copy related clip audio files
-    clip_names: list[str] = ext_df["path"].to_list()
+    clip_names: List[str] = ext_df["path"].to_list()
     for clip_name in clip_names:
         shutil.copy(os.path.join(cv_latest_audio_path, clip_name), dest_clips_path)
     # get audio lengths
@@ -160,42 +164,54 @@ def handle_locale(lc: str) -> TestSetRec:
 
 
 def main() -> None:
-    """Main process which loops through whisper languages and handles locales with MP"""
+    """Main process forms a applicable LC list, and loops tests with MP"""
 
     # print(f"==> Whisper supports {len(c.WHISPER_LC)} locales...", c.WHISPER_LC)
-    print(f"==> Whisper supports {len(c.WHISPER_LC)} locales...")
+    print(f"==> Whisper supports {len(c.WHISPER_LC)} locales: {c.WHISPER_LC}")
+    # re-map whisper languages to CV codes
+    wlc_list: List[str] = [lc_mapper(lc) for lc in c.WHISPER_LC]
+    print(f"+++ Whisper mapped to CV codes: {wlc_list}")
 
     # Make sure locale exist in latest CV version and has validator
-    validator_locales: list[str] = [v.split(os.sep)[-2] for v in cv.validators()]
+    validator_locales: List[str] = sorted([v.split(os.sep)[-2] for v in cv.validators()])
     # print(f"==> Validator supports {len(validator_locales)} locales...", validator_locales)
-    print(f"==> Validator supports {len(validator_locales)} locales...")
-    lc_list: list[str] = []
-    # Whisper might be trained with other sources, so it is OK if not in v9 but it is in latest
-    # But we don't want commonvoice-utils unsupported ones
-    for lc in c.WHISPER_LC:
-        mapped_lc: str = lc_mapper(lc)
-        cv_latest_path: str = os.path.join(conf.CV_LATEST_DIR, mapped_lc)
-        if (
-            os.path.isdir(cv_latest_path)
-            and (mapped_lc in validator_locales)
-            and not (mapped_lc in conf.EXCLUDED_LANGUAGES)
+    print(f"+++ Validator supports {len(validator_locales)} locales: {validator_locales}")
+
+    # get the intersection
+    test_lc_list: List[str] = sorted(list(set(wlc_list) & set(validator_locales)))
+    print(f"==> Intersection: {len(test_lc_list)} locales: {test_lc_list}")
+
+    # Eliminate non-existing locales
+    eliminated_lc: List[str] = []
+    for lc in test_lc_list:
+        if not os.path.isdir(os.path.join(conf.CV_LATEST_DIR, lc)) or not os.path.isfile(
+            os.path.join(conf.CV_LATEST_DIR, lc, "validated.tsv")
         ):
-            lc_list.append(mapped_lc)
-        else:
-            print("Skipped:", lc, mapped_lc)
+            eliminated_lc.append(lc)
+    print(f"--- Non-existing: {len(eliminated_lc)} locales... ({eliminated_lc})")
+    test_lc_list = sorted(list(set(test_lc_list) - set(eliminated_lc)))
+    print(f"==> Remaining: {len(test_lc_list)} locales: {test_lc_list}")
 
-    print(f"==> Skipped {len(c.WHISPER_LC) - len(lc_list)} locales as they do not exist in CV/Validator...")
-
-    # Test
-    result_list: list[TestSetRec] = []
+    # Eliminate locales with low resource
+    eliminated_lc = []
+    for lc in test_lc_list:
+        df: pd.DataFrame = df_read(os.path.join(conf.CV_LATEST_DIR, lc, "validated.tsv"))
+        if df.shape[0] < conf.MIN_TEST_SIZE:
+            eliminated_lc.append(lc)
+    print(f"--- Low-resource: {len(eliminated_lc)} locales... ({eliminated_lc})")
+    test_lc_list = sorted(list(set(test_lc_list) - set(eliminated_lc)))
+    print(f"==> FINAL: {len(test_lc_list)} locales... ({test_lc_list})")
 
     # Multiprocess each locale
-    print(f"==> Processing remaining {len(lc_list)} locales...")
+    result_list: list[TestSetRec] = []
     with mp.Pool(NUM_PROCS) as pool:
-        result_list = pool.map(handle_locale, lc_list)
+        result_list = pool.map(handle_locale, test_lc_list)
 
     results_df: pd.DataFrame = pd.DataFrame.from_records(result_list, columns=c.TEST_SET_SUMMARY_COLS)
-    df_write(results_df, os.path.join(HERE, c.TEST_SETS_DIR, conf.TEST_SET, c.SUMMARY_FN))
+    p: str = os.path.join(HERE, c.TEST_SETS_DIR, conf.TEST_SET)
+    os.makedirs(p, exist_ok=True)
+    fp: str = os.path.join(p, c.SUMMARY_FN)
+    df_write(results_df, fp)
 
 
 # Entry point

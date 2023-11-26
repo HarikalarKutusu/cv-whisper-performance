@@ -17,7 +17,7 @@ import os
 #
 
 # Base location of tsv & audio files for latest Common Voice (currently v13.0)
-CV_LATEST_DIR: str = os.path.join("M:", os.sep, "DATASETS", "CV", "cv-corpus-13.0-2023-03-09")
+CV_LATEST_DIR: str = os.path.join("M:", os.sep, "DATASETS", "cv", "cv-corpus-15.0-2023-09-08")
 
 #
 # Whisper model related settings
@@ -26,7 +26,7 @@ CV_LATEST_DIR: str = os.path.join("M:", os.sep, "DATASETS", "CV", "cv-corpus-13.
 # This is the subdir where the model resides under data/models
 # You can put custom models in other subdirs and look for them
 # E.g. you can create small-en, small-de etc into "test" sub dir and set WHISPER_MODELS_DIR to "test"
-# This time, you should use 
+# This time, you should use
 WHISPER_MODELS_DIR: str = os.path.join("M:", os.sep, "__STATIC", "MODELS", "VOICE", "WHISPER", "default")
 
 # List of whisper models to test against
@@ -35,11 +35,12 @@ WHISPER_MODELS_DIR: str = os.path.join("M:", os.sep, "__STATIC", "MODELS", "VOIC
 # If you are only interested for a specific one, just uncomment it
 WHISPER_MODELS_TO_TEST: list[str] = [
     "tiny",
-    # "base",
-    # "small",
-    # "medium",
-    # "large-v1",
-    # "large-v2",
+    "base",
+    "small",
+    "medium",
+    "large",
+    "large-v2",
+    "large-v3",
 ]
 
 
@@ -47,12 +48,13 @@ WHISPER_MODELS_TO_TEST: list[str] = [
 # Test settings
 #
 # Subdir in data/test
-TEST_SET: str = "longest"
+TEST_SET: str = "longest-v15.0"
 
 # Subdir in data/results
-EXPERIMENT: str = "baseline-gpu"
+EXPERIMENT: str = "baseline-gpu-v15.0"
 
 # compile-test-set.py - Test set maximumn size
+MIN_TEST_SIZE: int = 50
 MAX_TEST_SIZE: int = 100
 
 # compile-test-set.py - Bias removal related
@@ -61,22 +63,22 @@ UNIQUE_SENTENCES_ONLY_IF_AVAILABLE: bool = True
 UNIQUE_VOICES: bool = True
 UNIQUE_VOICES_ONLY_IF_AVAILABLE: bool = True
 
-# Forced include languages to only process for them (keep empty for all)
-INCLUDE_LANGUAGES: list[str] = [
-    "tr",
-]
+# # Forced include languages to only process for them (keep empty for all)
+# INCLUDE_LANGUAGES: list[str] = [
+#     # "tr",
+# ]
 
-# Force exclude languages (if )
-EXCLUDED_LANGUAGES: list[str] = [
-    "is",  # no validated data in v13.0
-]
+# # Force exclude languages (if no validated data in iatest)
+# EXCLUDED_LANGUAGES: list[str] = [
+#     # "is",  #
+# ]
 
 #
 # Program parameters
 #
 
-VERBOSE: bool = False               # If true, more will be printed on the console
-FAIL_ON_NOT_FOUND: bool = True      # Fail process if dataset is not found
+VERBOSE: bool = False  # If true, more will be printed on the console
+FAIL_ON_NOT_FOUND: bool = True  # Fail process if dataset is not found
 
 #
 # GPU

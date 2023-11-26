@@ -39,6 +39,7 @@ LC_MAPPER: dict[str, str] = {
     "nn": "nn-NO",
     "pa": "pa-IN",
     "sv": "sv-SE",
+    "zh": "zh-CN",
 }
 
 # Map from CV lc code to Whisper language
@@ -47,6 +48,7 @@ LC_BACK_MAPPER: dict[str, str] = {
     "nn-NO": "nn",
     "pa-IN": "pa",
     "sv-SE": "sv",
+    "zh-CN": "zh",
 }
 
 # dir names
