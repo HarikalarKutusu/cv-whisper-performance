@@ -188,6 +188,8 @@ def handle_locale(*params) -> AggregationRec:
         # save locale results for this model
         trans_file.write("]\n")
 
+    # now we have all results for this locale, so we aggregate the results
+
     results_df: pd.DataFrame = pd.DataFrame.from_records(results, columns=c.TRANSCRIPTION_REC_COLS)
     df_write(results_df, dest_path)
 
@@ -224,14 +226,47 @@ def handle_model(model_name: str) -> None:
     print(f"==> Test run whisper model: {model_name}")
     print("*" * 80)
     # get a list of source test files
-    test_files: list[str] = glob.glob(
+    prospect_test_files: list[str] = glob.glob(
         os.path.join(HERE, c.TEST_SETS_DIR, conf.TEST_SET, "**", c.TEST_FN), recursive=True
     )
-    test_files.sort()
-    print(f"==> Languages in test set: {len(test_files)}")
+    prospect_test_files.sort()
+    print(f"==> Languages in test set: {len(prospect_test_files)}")
     # create destination dir
     dest_path: str = os.path.join(HERE, c.EXPERIMENTS_DIR, conf.EXPERIMENT, model_name)
     os.makedirs(dest_path, exist_ok=True)
+
+    # Remove locales with already existing results (e.g. after a power outage)
+    test_files: list[str] = []
+    skipped_existing: int = 0
+    # if we do continue from a crash, we need to reconstruct the existing reaults and prepend them to the new ones
+    old_results: list[AggregationRec] = []
+    for fpath in prospect_test_files:
+        lc: str = fpath.split(os.sep)[-2]
+        tsv_file: str = os.path.join(dest_path, lc + ".tsv")
+        if not os.path.isfile(tsv_file):
+            test_files.append(fpath)
+        else:
+            skipped_existing += 1
+            results_df: pd.DataFrame = df_read(tsv_file)
+            agg_result: AggregationRec = {
+                "model": model_name,
+                "lc": lc,
+                "num_sentences": results_df.shape[0],
+                "duration": dec2(results_df["duration"].sum()),
+                "avg_char_speed": dec2(results_df["char_speed"].mean()),
+                "inference_duration": dec2(results_df["item_inference_duration"].sum()),
+                "total_duration": 0.00,
+                "avg_cer": dec6(results_df["cer"].mean()),
+                "avg_wer": dec6(results_df["wer"].mean()),
+                "avg_mer": dec6(results_df["mer"].mean()),
+                "avg_wil": dec6(results_df["wil"].mean()),
+                "avg_wip": dec6(results_df["wip"].mean()),
+                "avg_rtf": dec6(results_df["rtf"].mean()),
+            }
+            old_results.append((agg_result))
+
+    if skipped_existing > 0:
+        print(f"==> Languages already processed: {skipped_existing}, remaining: {len(test_files)}")
 
     # input records
     args = []
@@ -261,6 +296,11 @@ def handle_model(model_name: str) -> None:
         #     exc_type, exc_obj, exc_tb = sys.exc_info()
         #     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         #     print(exc_type, fname, exc_tb.tb_lineno)
+
+    # if they exist, merge with old results
+    if skipped_existing > 0:
+        old_results.extend(results)
+        results = old_results
 
     results_df: pd.DataFrame = pd.DataFrame.from_records(results, columns=c.AGGREGATION_REC_COLS)
     df_write(results_df, os.path.join(HERE, c.EXPERIMENTS_DIR, conf.EXPERIMENT, f"{model_name}_summary.tsv"))
