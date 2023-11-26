@@ -34,13 +34,13 @@ WHISPER_MODELS_DIR: str = os.path.join("M:", os.sep, "__STATIC", "MODELS", "VOIC
 # So you might want to run these one by one, or multiple for overnight
 # If you are only interested for a specific one, just uncomment it
 WHISPER_MODELS_TO_TEST: list[str] = [
-    # "tiny",
-    # "base",
-    # "small",
-    # "medium",
-    # "large",
+    "tiny",
+    "base",
+    "small",
+    "medium",
+    "large",
     "large-v2",
-    # "large-v3",
+    "large-v3",
 ]
 
 
