@@ -17,7 +17,7 @@ import os
 #
 
 # Base location of tsv & audio files for latest Common Voice (currently v13.0)
-CV_LATEST_DIR: str = os.path.join("M:", os.sep, "DATASETS", "cv", "cv-corpus-15.0-2023-09-08")
+CV_LATEST_DIR: str = os.path.join("M:", os.sep, "DATASETS", "cv", "cv-corpus-17.0-2024-03-20")
 
 #
 # Whisper model related settings
@@ -27,7 +27,7 @@ CV_LATEST_DIR: str = os.path.join("M:", os.sep, "DATASETS", "cv", "cv-corpus-15.
 # You can put custom models in other subdirs and look for them
 # E.g. you can create small-en, small-de etc into "test" sub dir and set WHISPER_MODELS_DIR to "test"
 # This time, you should use
-WHISPER_MODELS_DIR: str = os.path.join("M:", os.sep, "__STATIC", "MODELS", "VOICE", "WHISPER", "default")
+WHISPER_MODELS_DIR: str = os.path.join("M:", os.sep, "MODELS", "VOICE", "WHISPER", "default")
 
 # List of whisper models to test against
 # Each test runs for 30 min - 3 hours on a 6*2 core CPU & rtx-3090
@@ -48,10 +48,10 @@ WHISPER_MODELS_TO_TEST: list[str] = [
 # Test settings
 #
 # Subdir in data/test
-TEST_SET: str = "longest-v15.0"
+TEST_SET: str = "longest-v17.0"
 
 # Subdir in data/results
-EXPERIMENT: str = "baseline-gpu-v15.0"
+EXPERIMENT: str = "baseline-gpu-v17.0"
 
 # compile-test-set.py - Test set maximumn size
 MIN_TEST_SIZE: int = 50
